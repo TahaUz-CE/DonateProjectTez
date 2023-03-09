@@ -1077,8 +1077,6 @@ contract DonateTracking is ERC20, Ownable {
     struct Label{
         bytes32 myLabelCode;
         bytes32 labelCode;
-        uint256 donateBalance;
-        uint256 prevDonateBalance;
     }
 
     /* struct LabelInfo{
@@ -1092,7 +1090,6 @@ contract DonateTracking is ERC20, Ownable {
         address myAddresss;
         bytes32 myLabelCode;
         bytes32 labelCode;
-        uint256 donateBalance;
     }
 
     struct TransferHistory{
@@ -1104,8 +1101,14 @@ contract DonateTracking is ERC20, Ownable {
     }
 
     EnumerableSet.AddressSet private _labels;
+
+    // Hangi kişilere yolladığını tutan değişken bunun dışında o kişiye yollanan miktar da gerekicek
+    mapping(address => uint256[]) public donateBalanceHistory;
     
     mapping(address => Label) public addressToLabels;
+
+    // Hangi kişilere yolladığını tutan değişken bunun dışında o kişiye yollanan miktar da gerekicek
+    mapping(address => EnumerableSet.AddressSet) private personelInvoice;
 
     mapping(bytes32 => address) public LabelCodestoAddress;
 
@@ -1236,9 +1239,9 @@ contract DonateTracking is ERC20, Ownable {
         emit LabelWalletLimitUpdated(LabelWalletLimit);
     }
 
-    function userLabelInfo(address _user) public view returns(bytes32,bytes32,uint256) {
+    function userLabelInfo(address _user) public view returns(bytes32,bytes32) {
         Label memory LabelInformation = addressToLabels[_user];
-        return (LabelInformation.labelCode,LabelInformation.myLabelCode,LabelInformation.donateBalance);
+        return (LabelInformation.labelCode,LabelInformation.myLabelCode);
     }
 
     function getAlllabels() external view returns(LabelInfo[] memory){
@@ -1250,8 +1253,8 @@ contract DonateTracking is ERC20, Ownable {
             list[i] = LabelInfo(
                 _labels.at(i),
                 addressToLabels[_labels.at(i)].myLabelCode,
-                addressToLabels[_labels.at(i)].labelCode,
-                addressToLabels[_labels.at(i)].donateBalance
+                addressToLabels[_labels.at(i)].labelCode/* ,
+                 addressToLabels[_labels.at(i)].donateBalance */
             );
         }
         return list;
@@ -1268,7 +1271,7 @@ contract DonateTracking is ERC20, Ownable {
                 LabelCodestoAddress[addressToLabels[_labels.at(i)].labelCode], // Dynamic To Address
                 addressToLabels[_labels.at(i)].myLabelCode,
                 addressToLabels[_labels.at(i)].labelCode,
-                addressToLabels[_labels.at(i)].donateBalance // Dynamic Donate Balance
+                donateBalanceHistory[_labels.at(i)][0] // Dynamic Donate Balance
             );
         }
         return list;
@@ -1279,8 +1282,8 @@ contract DonateTracking is ERC20, Ownable {
         return LabelInfo(
                 _labels.at(index),
                 addressToLabels[_labels.at(index)].myLabelCode,
-                addressToLabels[_labels.at(index)].labelCode,
-                addressToLabels[_labels.at(index)].donateBalance
+                addressToLabels[_labels.at(index)].labelCode/* ,
+                addressToLabels[_labels.at(index)].donateBalance */
         );
     }
 
@@ -1292,27 +1295,27 @@ contract DonateTracking is ERC20, Ownable {
         return LabelInfo(
                 _user,
                 addressToLabels[_user].myLabelCode,
-                addressToLabels[_user].labelCode,
-                addressToLabels[_user].donateBalance
+                addressToLabels[_user].labelCode/* ,
+                addressToLabels[_user].donateBalance */
         );
     }
 
     function getLastTransferHistoryByAddress(address _user) external view returns(TransferHistory memory){
         
-        uint256 result;
+        /* uint256 result; */
 
-        if(addressToLabels[_user].donateBalance > addressToLabels[_user].prevDonateBalance){
+        /* if(addressToLabels[_user].donateBalance > addressToLabels[_user].prevDonateBalance){
             result = addressToLabels[_user].donateBalance - addressToLabels[_user].prevDonateBalance;
         }else{
             result = addressToLabels[_user].prevDonateBalance - addressToLabels[_user].donateBalance;
-        }
+        } */
 
         return TransferHistory(
                 _user,
                 LabelCodestoAddress[addressToLabels[_user].labelCode],
                 addressToLabels[_user].myLabelCode,
-                addressToLabels[_user].labelCode,
-                result
+                addressToLabels[_user].labelCode ,
+                donateBalanceHistory[_user][0] 
         );
     }
 
@@ -1320,8 +1323,8 @@ contract DonateTracking is ERC20, Ownable {
         return LabelInfo(
             LabelCodestoAddress[_code],
             addressToLabels[LabelCodestoAddress[_code]].labelCode,
-            addressToLabels[LabelCodestoAddress[_code]].myLabelCode,
-            addressToLabels[LabelCodestoAddress[_code]].donateBalance
+            addressToLabels[LabelCodestoAddress[_code]].myLabelCode/* ,
+            addressToLabels[LabelCodestoAddress[_code]].donateBalance */
         );
     }
 
@@ -1337,8 +1340,8 @@ contract DonateTracking is ERC20, Ownable {
             list[i] = LabelInfo(
                 _labels.at(i + start),
                 addressToLabels[_labels.at(i + start)].myLabelCode,
-                addressToLabels[_labels.at(i + start)].labelCode,
-                addressToLabels[_labels.at(i + start)].donateBalance
+                addressToLabels[_labels.at(i + start)].labelCode/* ,
+                addressToLabels[_labels.at(i + start)].donateBalance */
             );
         }
         return list;
@@ -1521,12 +1524,11 @@ contract DonateTracking is ERC20, Ownable {
             super._transfer(from, address(this), fees);
         }
 
-        transferCodestoAddressTrack
 
-        if(addressToLabels[receiver].donateBalance != 0){
+        /* if(addressToLabels[receiver].donateBalance != 0){
                 addressToLabels[receiver].prevDonateBalance = addressToLabels[receiver].donateBalance;
-        }
-        addressToLabels[receiver].donateBalance = amount;
+        } */
+        /* addressToLabels[receiver].donateBalance = amount; */
 
         super._transfer(from, to, amount);  
     }
