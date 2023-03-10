@@ -1,1 +1,3 @@
-# A Donate Tracking System project for graduation thesis
+# Donate Tracking System
+
+A blockchain-based project for graduation thesis.
