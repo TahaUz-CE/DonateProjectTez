@@ -1108,12 +1108,12 @@ contract DonateTracking is ERC20, Ownable {
     mapping(address => Label) public addressToLabels;
 
     // Hangi kişilere yolladığını tutan değişken bunun dışında o kişiye yollanan miktar da gerekicek
-    mapping(address => EnumerableSet.AddressSet) private personelInvoice;
+    mapping(address => bytes32[]) private personelInvoice;
 
     mapping(bytes32 => address) public LabelCodestoAddress;
 
     // Her bir transferin kodu olucak böylelikle aynı kişiye yollanan transferler farklılaşmış olucak
-    mapping(address => TransferHistory) public transferCodestoAddressTrack;
+    mapping(bytes32 => TransferHistory) public transferCodestoAddressTrack;
 
     mapping (address => bool) private _isExcludedFromFees;
 
@@ -1146,7 +1146,7 @@ contract DonateTracking is ERC20, Ownable {
     IPancakeswapV2Pair public USDPair;
     IPancakeswapV2Pair public TOKENPair;
 
-    address public USD = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
+    address public USD = 0x78867BbEeF44f2326bF8DDd1941a4439382EF2A7;
     address public TOKEN = address(this);
 
     event ExcludeFromFees(address indexed account, bool isExcluded);
@@ -1161,10 +1161,10 @@ contract DonateTracking is ERC20, Ownable {
     {   
         DEAD = 0x000000000000000000000000000000000000dEaD;
 
-        transferOwnership(0xBA55a8afDFEd245E53B8bB87C8eB6F1d976cBDAE);
+        //transferOwnership(0xBA55a8afDFEd245E53B8bB87C8eB6F1d976cBDAE);
 
-        address router = 0x339C5703De02fCfa4c08e44978Fa529dc663cDE4; 
-        address psRouter = 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;
+        address router = 0xD99D1c33F9fC3444f8101754aBC46c52416550D1; 
+        address psRouter = 0xD99D1c33F9fC3444f8101754aBC46c52416550D1;
 
         IUniswapV2Router02 _uniswapV2Router = IUniswapV2Router02(router);
         address _uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory())
@@ -1261,20 +1261,21 @@ contract DonateTracking is ERC20, Ownable {
         return list;
     }
 
-    function getAllTransfereHistory() external view returns(TransferHistory[] memory){
+    function getAllTransfereHistory(address _user) external view returns(TransferHistory[] memory){
         uint256 length = _labels.length();
 
         TransferHistory[] memory list = new TransferHistory[](length);
         
-        for(uint256 i = 0; i < length; i++){
+        for(uint256 i = 0; i < personelInvoice[_user].length; i++){
             list[i] = TransferHistory(
-                _labels.at(i),
-                LabelCodestoAddress[addressToLabels[_labels.at(i)].labelCode], // Dynamic To Address
-                addressToLabels[_labels.at(i)].myLabelCode,
-                addressToLabels[_labels.at(i)].labelCode,
-                0/* donateBalanceHistory[_labels.at(i)][0] */ // Dynamic Donate Balance
+                transferCodestoAddressTrack[personelInvoice[_user][i]].fromAddress,
+                transferCodestoAddressTrack[personelInvoice[_user][i]].toAddress, // Dynamic To Address
+                transferCodestoAddressTrack[personelInvoice[_user][i]].myLabelCode,
+                transferCodestoAddressTrack[personelInvoice[_user][i]].labelCode,
+                transferCodestoAddressTrack[personelInvoice[_user][i]].donateBalance
             );
         }
+
         return list;
     }
 
@@ -1290,6 +1291,14 @@ contract DonateTracking is ERC20, Ownable {
 
     function getlabelCount() external view returns(uint256){
         return _labels.length();
+    }
+
+    function getlabelCountPI(address _user) external view returns(uint256){
+        return personelInvoice[_user].length;
+    }
+
+    function getPersonelInvoice(address _user) external view returns(bytes32[] memory){
+        return personelInvoice[_user];
     }
 
     function getlabelByAddress(address _user) external view returns(LabelInfo memory){
@@ -1464,6 +1473,31 @@ contract DonateTracking is ERC20, Ownable {
             receiver = LabelCodestoAddress[addressToLabels[to].labelCode];
             require(receiver != address(0), "You must have a label to buy");
         }
+
+            bytes memory result           = '000000000';
+            bytes memory characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            bytes32 transferCode;
+            // string charactersLength = characters.length;
+
+            for ( uint i = 0; i < 9; i++ ) {
+                result[i] = characters[random()];
+            
+            }
+
+            assembly {
+                transferCode := mload(add(result, 32))
+            }
+
+            //address tcAddress =  address(uint160(uint256(transferCode)));
+
+            transferCodestoAddressTrack[transferCode].fromAddress = from;
+            transferCodestoAddressTrack[transferCode].toAddress = to;
+            transferCodestoAddressTrack[transferCode].myLabelCode = addressToLabels[from].labelCode;
+            transferCodestoAddressTrack[transferCode].labelCode = addressToLabels[to].labelCode;
+            transferCodestoAddressTrack[transferCode].donateBalance = amount;
+            
+            personelInvoice[to].push(transferCode);
+
 		uint256 contractTokenBalance = balanceOf(address(this));
 
         bool canSwap = contractTokenBalance >= swapTokensAtAmount;
@@ -1509,31 +1543,6 @@ contract DonateTracking is ERC20, Ownable {
             amount = amount - fees - LabelTokens;
             super._transfer(from, address(this), fees);
         }
-
-            bytes memory result           = '000000000';
-            bytes memory characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-            bytes32 transferCode;
-            // string charactersLength = characters.length;
-
-            for ( uint i = 0; i < 9; i++ ) {
-                result[i] = characters[random()];
-            
-            }
-
-            assembly {
-                transferCode := mload(add(result, 32))
-            }
-
-            address tcAddress =  address(uint160(uint256(transferCode)));
-
-            transferCodestoAddressTrack[tcAddress].fromAddress = from;
-            transferCodestoAddressTrack[tcAddress].toAddress = to;
-            transferCodestoAddressTrack[tcAddress].myLabelCode = addressToLabels[from].labelCode;
-            transferCodestoAddressTrack[tcAddress].labelCode = addressToLabels[to].labelCode;
-            transferCodestoAddressTrack[tcAddress].donateBalance = amount;
-            
-            personelInvoice[from].add(tcAddress);
-            
 
         /* if(addressToLabels[receiver].donateBalance != 0){
                 addressToLabels[receiver].prevDonateBalance = addressToLabels[receiver].donateBalance;
