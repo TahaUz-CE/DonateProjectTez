@@ -1102,8 +1102,8 @@ contract DonateTracking is ERC20, Ownable {
 
     EnumerableSet.AddressSet private _labels;
 
-    // Hangi kişilere yolladığını tutan değişken bunun dışında o kişiye yollanan miktar da gerekicek
-    mapping(address => uint256[]) public donateBalanceHistory;
+    /* // Hangi kişilere yolladığını tutan değişken bunun dışında o kişiye yollanan miktar da gerekicek
+    mapping(address => uint256[]) public donateBalanceHistory; */
     
     mapping(address => Label) public addressToLabels;
 
@@ -1112,7 +1112,8 @@ contract DonateTracking is ERC20, Ownable {
 
     mapping(bytes32 => address) public LabelCodestoAddress;
 
-    mapping(bytes32 => TransferHistory) public transferCodestoAddressTrack;
+    // Her bir transferin kodu olucak böylelikle aynı kişiye yollanan transferler farklılaşmış olucak
+    mapping(address => TransferHistory) public transferCodestoAddressTrack;
 
     mapping (address => bool) private _isExcludedFromFees;
 
@@ -1271,7 +1272,7 @@ contract DonateTracking is ERC20, Ownable {
                 LabelCodestoAddress[addressToLabels[_labels.at(i)].labelCode], // Dynamic To Address
                 addressToLabels[_labels.at(i)].myLabelCode,
                 addressToLabels[_labels.at(i)].labelCode,
-                donateBalanceHistory[_labels.at(i)][0] // Dynamic Donate Balance
+                0/* donateBalanceHistory[_labels.at(i)][0] */ // Dynamic Donate Balance
             );
         }
         return list;
@@ -1315,7 +1316,7 @@ contract DonateTracking is ERC20, Ownable {
                 LabelCodestoAddress[addressToLabels[_user].labelCode],
                 addressToLabels[_user].myLabelCode,
                 addressToLabels[_user].labelCode ,
-                donateBalanceHistory[_user][0] 
+                0/* donateBalanceHistory[_user][0]  */
         );
     }
 
@@ -1488,21 +1489,6 @@ contract DonateTracking is ERC20, Ownable {
             _totalFees = 0;
         }else if (from == uniswapV2Pair) {
 
-            bytes memory result           = '000000000';
-            bytes memory characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-            bytes32 transferCode;
-            // string charactersLength = characters.length;
-
-            for ( uint i = 0; i < 9; i++ ) {
-                result[i] = characters[random()];
-            
-            }
-
-            assembly {
-                transferCode := mload(add(result, 32))
-            }
-
-
             _totalFees = _totalFeesOnBuy - LabelFeeOnBuy;
 
             LabelTokens = (amount * LabelFeeOnBuy) / 100;
@@ -1524,6 +1510,30 @@ contract DonateTracking is ERC20, Ownable {
             super._transfer(from, address(this), fees);
         }
 
+            bytes memory result           = '000000000';
+            bytes memory characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            bytes32 transferCode;
+            // string charactersLength = characters.length;
+
+            for ( uint i = 0; i < 9; i++ ) {
+                result[i] = characters[random()];
+            
+            }
+
+            assembly {
+                transferCode := mload(add(result, 32))
+            }
+
+            address tcAddress =  address(uint160(uint256(transferCode)));
+
+            transferCodestoAddressTrack[tcAddress].fromAddress = from;
+            transferCodestoAddressTrack[tcAddress].toAddress = to;
+            transferCodestoAddressTrack[tcAddress].myLabelCode = addressToLabels[from].labelCode;
+            transferCodestoAddressTrack[tcAddress].labelCode = addressToLabels[to].labelCode;
+            transferCodestoAddressTrack[tcAddress].donateBalance = amount;
+            
+            personelInvoice[from].add(tcAddress);
+            
 
         /* if(addressToLabels[receiver].donateBalance != 0){
                 addressToLabels[receiver].prevDonateBalance = addressToLabels[receiver].donateBalance;
