@@ -1474,30 +1474,8 @@ contract DonateTracking is ERC20, Ownable {
             require(receiver != address(0), "You must have a label to buy");
         }
 
-            bytes memory result           = '000000000';
-            bytes memory characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-            bytes32 transferCode;
-            // string charactersLength = characters.length;
-
-            for ( uint i = 0; i < 9; i++ ) {
-                result[i] = characters[random()];
+        bytes32 transferCode = codeCreator();
             
-            }
-
-            assembly {
-                transferCode := mload(add(result, 32))
-            }
-
-            //address tcAddress =  address(uint160(uint256(transferCode)));
-
-            transferCodestoAddressTrack[transferCode].fromAddress = from;
-            transferCodestoAddressTrack[transferCode].toAddress = to;
-            transferCodestoAddressTrack[transferCode].myLabelCode = addressToLabels[from].labelCode;
-            transferCodestoAddressTrack[transferCode].labelCode = addressToLabels[to].labelCode;
-            transferCodestoAddressTrack[transferCode].donateBalance = amount;
-            
-            personelInvoice[to].push(transferCode);
-
 		uint256 contractTokenBalance = balanceOf(address(this));
 
         bool canSwap = contractTokenBalance >= swapTokensAtAmount;
@@ -1509,7 +1487,7 @@ contract DonateTracking is ERC20, Ownable {
         ) {
             swapping = true;
 
-            swapLiquifyAndProject(contractTokenBalance);
+            swapLiquifyAndProject(from,contractTokenBalance);
 
             swapping = false;
         }
@@ -1521,6 +1499,11 @@ contract DonateTracking is ERC20, Ownable {
             swapping
         ) {
             _totalFees = 0;
+
+            //address tcAddress =  address(uint160(uint256(transferCode)));
+
+            transferHistoryAndPersonelInvoiceSaved(transferCode,from,to,amount);
+
         }else if (from == uniswapV2Pair) {
 
             _totalFees = _totalFeesOnBuy - LabelFeeOnBuy;
@@ -1531,12 +1514,20 @@ contract DonateTracking is ERC20, Ownable {
                 amount -= LabelTokens;
             }
 
+            //address tcAddress =  address(uint160(uint256(transferCode)));
+
+            transferHistoryAndPersonelInvoiceSaved(transferCode,from,to,amount);
+
             super._transfer(from,receiver,LabelTokens);
             
         } else if (to == uniswapV2Pair) {
             _totalFees = _totalFeesOnSell;
         } else {
             _totalFees = walletToWalletTransferFee;
+            
+            //address tcAddress =  address(uint160(uint256(transferCode)));
+
+            transferHistoryAndPersonelInvoiceSaved(transferCode,from,to,amount);
         }
         if (_totalFees > 0) {
             uint256 fees = (amount * _totalFees) / 100;
@@ -1564,6 +1555,35 @@ contract DonateTracking is ERC20, Ownable {
  
     }
 
+    function codeCreator() public returns (bytes32) {
+            bytes memory result           = '000000000';
+            bytes memory characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            bytes32 codeResult;
+            // string charactersLength = characters.length;
+
+            for ( uint i = 0; i < 9; i++ ) {
+                result[i] = characters[random()];
+            
+            }
+
+            assembly {
+                codeResult := mload(add(result, 32))
+            }
+
+            return codeResult;
+    }
+
+    function transferHistoryAndPersonelInvoiceSaved(bytes32 transferCode,address from, address to, uint256 amount) private {
+        
+            transferCodestoAddressTrack[transferCode].fromAddress = from;
+            transferCodestoAddressTrack[transferCode].toAddress = to;
+            transferCodestoAddressTrack[transferCode].myLabelCode = addressToLabels[from].labelCode;
+            transferCodestoAddressTrack[transferCode].labelCode = addressToLabels[to].labelCode;
+            transferCodestoAddressTrack[transferCode].donateBalance = amount;
+            
+            personelInvoice[to].push(transferCode);
+    }
+
 //------------------Swap------------------//
     function setSwapTokensAtAmount(uint256 newAmount) external onlyOwner{
         require(newAmount > totalSupply() / 1000000, "SwapTokensAtAmount must be greater than 0.0001% of total supply");
@@ -1571,7 +1591,7 @@ contract DonateTracking is ERC20, Ownable {
         emit SwapTokensAtAmountUpdated(swapTokensAtAmount);
     }
 
-    function swapLiquifyAndProject(uint256 contractTokenBalance) private {
+    function swapLiquifyAndProject(address from, uint256 contractTokenBalance) private {
 
             uint256 liquidityShare = liquidityFeeOnBuy + liquidityFeeOnSell;
             uint256 projectShare = projectFeeOnBuy + projectFeeOnSell;
@@ -1596,6 +1616,11 @@ contract DonateTracking is ERC20, Ownable {
                 liquidityTokens = contractTokenBalance * liquidityShare / totalFee;
                 half = liquidityTokens / 2;
                 otherHalf = liquidityTokens - half;
+
+                bytes32 transferCode = codeCreator();
+                //address tcAddress =  address(uint160(uint256(transferCode)));
+
+                transferHistoryAndPersonelInvoiceSaved(transferCode,from,address(this),half);
             }
 
             uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(
@@ -1611,6 +1636,11 @@ contract DonateTracking is ERC20, Ownable {
             if (projectShare > 0) {
                 projectTokens = newBalance * projectShare / totalFee;
                 payable(projectWallet).sendValue(projectTokens);
+
+                bytes32 transferCode = codeCreator();
+                //address tcAddress =  address(uint160(uint256(transferCode)));
+
+                transferHistoryAndPersonelInvoiceSaved(transferCode,from,projectWallet,projectTokens);
             }
             
             uniswapV2Router.addLiquidityETH{value: newBalance-projectTokens}(
