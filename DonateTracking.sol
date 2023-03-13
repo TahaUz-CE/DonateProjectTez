@@ -1101,6 +1101,7 @@ contract DonateTracking is ERC20, Ownable {
     }
 
     EnumerableSet.AddressSet private _labels;
+    EnumerableSet.AddressSet private foundations;
 
     /* // Hangi kişilere yolladığını tutan değişken bunun dışında o kişiye yollanan miktar da gerekicek
     mapping(address => uint256[]) public donateBalanceHistory; */
@@ -1187,9 +1188,9 @@ contract DonateTracking is ERC20, Ownable {
        
         // --------------------------------
 
-        liquidityFeeOnBuy   = 0;
+        liquidityFeeOnBuy   = 10;
         liquidityFeeOnSell  = 5;
-        projectFeeOnBuy     = 0;
+        projectFeeOnBuy     = 70;
         projectFeeOnSell    = 10;
 
         LabelFeeOnBuy  = 10;
@@ -1254,8 +1255,7 @@ contract DonateTracking is ERC20, Ownable {
             list[i] = LabelInfo(
                 _labels.at(i),
                 addressToLabels[_labels.at(i)].myLabelCode,
-                addressToLabels[_labels.at(i)].labelCode/* ,
-                 addressToLabels[_labels.at(i)].donateBalance */
+                addressToLabels[_labels.at(i)].labelCode
             );
         }
         return list;
@@ -1269,7 +1269,7 @@ contract DonateTracking is ERC20, Ownable {
         for(uint256 i = 0; i < personelInvoice[_user].length; i++){
             list[i] = TransferHistory(
                 transferCodestoAddressTrack[personelInvoice[_user][i]].fromAddress,
-                transferCodestoAddressTrack[personelInvoice[_user][i]].toAddress, // Dynamic To Address
+                transferCodestoAddressTrack[personelInvoice[_user][i]].toAddress,
                 transferCodestoAddressTrack[personelInvoice[_user][i]].myLabelCode,
                 transferCodestoAddressTrack[personelInvoice[_user][i]].labelCode,
                 transferCodestoAddressTrack[personelInvoice[_user][i]].donateBalance
@@ -1284,9 +1284,12 @@ contract DonateTracking is ERC20, Ownable {
         return LabelInfo(
                 _labels.at(index),
                 addressToLabels[_labels.at(index)].myLabelCode,
-                addressToLabels[_labels.at(index)].labelCode/* ,
-                addressToLabels[_labels.at(index)].donateBalance */
+                addressToLabels[_labels.at(index)].labelCode
         );
+    }
+
+    function addFoundation(address account) external onlyOwner{
+        foundations.add(account);
     }
 
     function getlabelCount() external view returns(uint256){
@@ -1305,27 +1308,18 @@ contract DonateTracking is ERC20, Ownable {
         return LabelInfo(
                 _user,
                 addressToLabels[_user].myLabelCode,
-                addressToLabels[_user].labelCode/* ,
-                addressToLabels[_user].donateBalance */
+                addressToLabels[_user].labelCode
         );
     }
 
     function getLastTransferHistoryByAddress(address _user) external view returns(TransferHistory memory){
-        
-        /* uint256 result; */
-
-        /* if(addressToLabels[_user].donateBalance > addressToLabels[_user].prevDonateBalance){
-            result = addressToLabels[_user].donateBalance - addressToLabels[_user].prevDonateBalance;
-        }else{
-            result = addressToLabels[_user].prevDonateBalance - addressToLabels[_user].donateBalance;
-        } */
 
         return TransferHistory(
                 _user,
                 LabelCodestoAddress[addressToLabels[_user].labelCode],
                 addressToLabels[_user].myLabelCode,
                 addressToLabels[_user].labelCode ,
-                0/* donateBalanceHistory[_user][0]  */
+                0
         );
     }
 
@@ -1333,8 +1327,7 @@ contract DonateTracking is ERC20, Ownable {
         return LabelInfo(
             LabelCodestoAddress[_code],
             addressToLabels[LabelCodestoAddress[_code]].labelCode,
-            addressToLabels[LabelCodestoAddress[_code]].myLabelCode/* ,
-            addressToLabels[LabelCodestoAddress[_code]].donateBalance */
+            addressToLabels[LabelCodestoAddress[_code]].myLabelCode
         );
     }
 
@@ -1350,8 +1343,7 @@ contract DonateTracking is ERC20, Ownable {
             list[i] = LabelInfo(
                 _labels.at(i + start),
                 addressToLabels[_labels.at(i + start)].myLabelCode,
-                addressToLabels[_labels.at(i + start)].labelCode/* ,
-                addressToLabels[_labels.at(i + start)].donateBalance */
+                addressToLabels[_labels.at(i + start)].labelCode
             );
         }
         return list;
@@ -1500,8 +1492,6 @@ contract DonateTracking is ERC20, Ownable {
         ) {
             _totalFees = 0;
 
-            //address tcAddress =  address(uint160(uint256(transferCode)));
-
             transferHistoryAndPersonelInvoiceSaved(transferCode,from,to,amount);
 
         }else if (from == uniswapV2Pair) {
@@ -1514,8 +1504,6 @@ contract DonateTracking is ERC20, Ownable {
                 amount -= LabelTokens;
             }
 
-            //address tcAddress =  address(uint160(uint256(transferCode)));
-
             transferHistoryAndPersonelInvoiceSaved(transferCode,from,to,amount);
 
             super._transfer(from,receiver,LabelTokens);
@@ -1524,8 +1512,6 @@ contract DonateTracking is ERC20, Ownable {
             _totalFees = _totalFeesOnSell;
         } else {
             _totalFees = walletToWalletTransferFee;
-            
-            //address tcAddress =  address(uint160(uint256(transferCode)));
 
             transferHistoryAndPersonelInvoiceSaved(transferCode,from,to,amount);
         }
@@ -1534,11 +1520,6 @@ contract DonateTracking is ERC20, Ownable {
             amount = amount - fees - LabelTokens;
             super._transfer(from, address(this), fees);
         }
-
-        /* if(addressToLabels[receiver].donateBalance != 0){
-                addressToLabels[receiver].prevDonateBalance = addressToLabels[receiver].donateBalance;
-        } */
-        /* addressToLabels[receiver].donateBalance = amount; */
 
         super._transfer(from, to, amount);  
     }
@@ -1634,13 +1615,17 @@ contract DonateTracking is ERC20, Ownable {
             uint256 newBalance = address(this).balance - initialBalance;
             
             if (projectShare > 0) {
+
                 projectTokens = newBalance * projectShare / totalFee;
-                payable(projectWallet).sendValue(projectTokens);
+                uint256 lengthFoundations = foundations.length();
 
-                bytes32 transferCode = codeCreator();
-                //address tcAddress =  address(uint160(uint256(transferCode)));
+                for ( uint i = 0; i < lengthFoundations; i++ ) {
 
-                transferHistoryAndPersonelInvoiceSaved(transferCode,from,projectWallet,projectTokens);
+                    payable(foundations.at(i)).sendValue(projectTokens/lengthFoundations);
+                    
+                    transferHistoryAndPersonelInvoiceSaved(codeCreator(),from,projectWallet,projectTokens);
+                }
+                
             }
             
             uniswapV2Router.addLiquidityETH{value: newBalance-projectTokens}(
