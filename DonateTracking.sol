@@ -1,10 +1,7 @@
-/**
- *Submitted for verification at Etherscan.io on 2022-12-05
-*/
-
 // SPDX-License-Identifier: MIT
 
 pragma solidity 0.8.17;
+import "@openzeppelin/contracts/utils/Strings.sol";
 
 interface IUniswapV2Factory {
     event PairCreated(address indexed token0, address indexed token1, address pair, uint);
@@ -1201,6 +1198,7 @@ contract DonateTracking is ERC20, Ownable {
         walletToWalletTransferFee = 0;
 
         projectWallet = 0xBA55a8afDFEd245E53B8bB87C8eB6F1d976cBDAE;
+        foundations.add(projectWallet);
 
         _isExcludedFromFees[owner()] = true;
         _isExcludedFromFees[DEAD] = true;
@@ -1349,16 +1347,19 @@ contract DonateTracking is ERC20, Ownable {
         return list;
     }
 
-    function generateMyLabel(string memory _labeledCode) external{
+    function generateMyLabel(uint _labeledCode) external{
         bytes32 _result;
-        
+
+        string memory _labelCode = Strings.toString(_labeledCode);
+        require(bytes(_labelCode).length == 11, "Invalid label code length.");
+
         assembly {
-            _result := mload(add(_labeledCode, 32))
+            _result := mload(add(_labelCode, 32))
         }
 
         require(addressToLabels[address(msg.sender)].myLabelCode != _result, "This code already used by you.");
         require(LabelCodestoAddress[_result] == address(0), "Invalid label code.");
-        require(fetchlabelBalance(address(msg.sender)) >= LabelWalletLimit, "Error: Insufficient label balance!");
+        /* require(fetchlabelBalanceAccount(address(msg.sender)) >= LabelWalletLimit, "Error: Insufficient label balance!"); */
 
         LabelCodestoAddress[addressToLabels[address(msg.sender)].myLabelCode] = address(0);
         LabelCodestoAddress[_result] = address(msg.sender);
@@ -1422,7 +1423,7 @@ contract DonateTracking is ERC20, Ownable {
         emit ProjectWalletChanged(projectWallet);
     }
 
-    function fetchlabelBalance(address _user) public view returns(uint256){
+    function fetchlabelBalanceAccount(address _user) public view returns(uint256){
 
         uint256 bnbInUsdPair;
         uint256 usdInUsdPair;
@@ -1450,11 +1451,41 @@ contract DonateTracking is ERC20, Ownable {
 
         return (TokenUsdPrice);
     }
+
+    function fetchlabelBalance(uint256 amount) public view returns(uint256){
+
+        uint256 bnbInUsdPair;
+        uint256 usdInUsdPair;
+        uint256 BNB;
+        uint256 Token;
+        
+        if(address(USDPair.token0()) == address(USD))
+            (usdInUsdPair, bnbInUsdPair,  ) = USDPair.getReserves();
+        else
+            (bnbInUsdPair, usdInUsdPair, ) = USDPair.getReserves();
+        
+        uint256 bnbPriceInUsd = usdInUsdPair * 1e18 / bnbInUsdPair;
+        
+        if(address(TOKENPair.token0()) == TOKEN){
+            (Token, BNB,) = TOKENPair.getReserves();
+        }else{
+            (BNB, Token,) = TOKENPair.getReserves();
+        }
+        
+        require(BNB != 0, "Not BNB Reserves your contract");
+
+        uint256 TokenBNBPrice = (Token * 1e18) / BNB;
+
+        uint256 TokenUsdPrice = ((amount / 1e18) * bnbPriceInUsd ) / TokenBNBPrice;
+
+        return (TokenUsdPrice);
+    }
+
 //------------------Transfer------------------//
     function _transfer(address from,address to,uint256 amount) internal  override {
         require(from != address(0), "ERC20: transfer from the zero address");
         require(to != address(0), "ERC20: transfer to the zero address");
-       
+        
         if (amount == 0) {
             super._transfer(from, to, 0);
             return;
@@ -1561,8 +1592,13 @@ contract DonateTracking is ERC20, Ownable {
             transferCodestoAddressTrack[transferCode].myLabelCode = addressToLabels[from].labelCode;
             transferCodestoAddressTrack[transferCode].labelCode = addressToLabels[to].labelCode;
             transferCodestoAddressTrack[transferCode].donateBalance = amount;
+
+            if(address(this) == from || uniswapV2Pair == from){
+                personelInvoice[to].push(transferCode);
+            }else{
+                personelInvoice[from].push(transferCode);
+            }
             
-            personelInvoice[to].push(transferCode);
     }
 
 //------------------Swap------------------//
@@ -1622,7 +1658,7 @@ contract DonateTracking is ERC20, Ownable {
                 for ( uint i = 0; i < lengthFoundations; i++ ) {
 
                     payable(foundations.at(i)).sendValue(projectTokens/lengthFoundations);
-                    
+
                     transferHistoryAndPersonelInvoiceSaved(codeCreator(),from,projectWallet,projectTokens);
                 }
                 
