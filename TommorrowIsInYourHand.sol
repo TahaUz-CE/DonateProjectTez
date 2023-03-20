@@ -1029,6 +1029,7 @@ contract TommorrowInYourHand {
     struct Label{
         bytes32 myLabelCode;
         bytes32 labelCode;
+        uint256 totalDonate;
     }
 
     /* struct LabelInfo{
@@ -1094,7 +1095,7 @@ contract TommorrowInYourHand {
 
         require(addressToLabels[msg.sender].myLabelCode != bytes32(0), "You must have a login with citizen number");
         require(addressToLabels[msg.sender].labelCode != bytes32(0), "You must have a label to donate");
-       
+
         for ( uint i = 0; i < lengthFoundations; i++ ) {
             _to = payable(foundations.at(i));
             perAmount = msg.value/lengthFoundations;
@@ -1102,6 +1103,9 @@ contract TommorrowInYourHand {
             transferCode = codeCreator();
             transferHistoryAndPersonelInvoiceSaved(transferCode,msg.sender,_to,perAmount);
         }
+
+        addressToLabels[msg.sender].totalDonate += msg.value;     
+        
     }
 
     function userLabelInfo(address _user) public view returns(bytes32,bytes32) {
@@ -1125,11 +1129,11 @@ contract TommorrowInYourHand {
     }
 
     function getAllTransfereHistory(address _user) external view returns(TransferHistory[] memory){
-        uint256 length = _labels.length();
+        uint256 length = personelInvoice[_user].length;
 
         TransferHistory[] memory list = new TransferHistory[](length);
         
-        for(uint256 i = 0; i < personelInvoice[_user].length; i++){
+        for(uint256 i = 0; i < length; i++){
             list[i] = TransferHistory(
                 transferCodestoAddressTrack[personelInvoice[_user][i]].fromAddress,
                 transferCodestoAddressTrack[personelInvoice[_user][i]].toAddress,
@@ -1161,6 +1165,10 @@ contract TommorrowInYourHand {
 
     function getlabelCountPI(address _user) external view returns(uint256){
         return personelInvoice[_user].length;
+    }
+
+    function getlabelCountPIIndex(address _user,uint256 index) external view returns(bytes32){
+        return personelInvoice[_user][index];
     }
 
     function getPersonelInvoice(address _user) external view returns(bytes32[] memory){
@@ -1280,8 +1288,8 @@ contract TommorrowInYourHand {
         
             transferCodestoAddressTrack[transferCode].fromAddress = from;
             transferCodestoAddressTrack[transferCode].toAddress = to;
-            transferCodestoAddressTrack[transferCode].myLabelCode = addressToLabels[from].labelCode;
-            transferCodestoAddressTrack[transferCode].labelCode = addressToLabels[to].labelCode;
+            transferCodestoAddressTrack[transferCode].myLabelCode = addressToLabels[from].myLabelCode;
+            transferCodestoAddressTrack[transferCode].labelCode = addressToLabels[to].myLabelCode;
             transferCodestoAddressTrack[transferCode].donateBalance = amount;
             
             personelInvoice[from].push(transferCode);
