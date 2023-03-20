@@ -62,12 +62,12 @@ function ProfileInformation() {
         provider
       );
 
-      const userReferralCode = await tokenContract.addressToReferrals(
+      const userReferralCode = await tokenContract.addressToLabels(
         currentAddress
       );
 
       const activeReferralCode = ethers.utils.parseBytes32String(
-        userReferralCode.referrerCode
+        userReferralCode.labelCode
       );
 
       setUsingReferralCodeSetting(activeReferralCode);
@@ -82,7 +82,7 @@ function ProfileInformation() {
   let referralCode = "12345678902";
   const handleCopyReferralCode = async (value) => {
     navigator.clipboard.writeText(value);
-    toast.success("Referral code copied", {
+    toast.success("Citizen number copied", {
       position: toast.POSITION.TOP_CENTER,
     });
   };
@@ -106,7 +106,7 @@ function ProfileInformation() {
     );
 
     try {
-      const referralCode = await referralCodeContract.addressToReferrals(
+      const referralCode = await referralCodeContract.addressToLabels(
         currentAddress
       );
 
@@ -116,7 +116,7 @@ function ProfileInformation() {
         setGetUserReferralCode(
           ethers.utils.parseBytes32String(referralCode[0])
         );
-        setUserReferrerAddress(referralCode.user);
+        setUserReferrerAddress(referralCode[1]);
       }
     } catch (err) {
       console.log(err);
@@ -144,13 +144,13 @@ function ProfileInformation() {
     );
 
     if (userReferralCode === "") {
-      toast.error("Please enter referral code", {
+      toast.error("Please enter citizen number", {
         position: toast.POSITION.TOP_CENTER,
       });
       return;
     }
-    if (userReferralCode.length !== 9) {
-      toast.error("Please enter valid referral code", {
+    if (userReferralCode.length !== 11) {
+      toast.error("Please enter valid citizen number", {
         position: toast.POSITION.TOP_CENTER,
       });
       return;
@@ -161,14 +161,14 @@ function ProfileInformation() {
     try {
       setReferralSetLoading(true);
 
-      const referralCodeTx = await referralCodeContract.generateMyReferral(
+      const referralCodeTx = await referralCodeContract.generateMyLabel(
         currentRefCode
       );
       await referralCodeTx.wait();
       setReferralSetLoading(false);
       getRefferalCodeFromAddress();
       setUserReferralCodeState(false);
-      toast.success("Referral code set successfully", {
+      toast.success("Citizen number set successfully", {
         position: toast.POSITION.TOP_CENTER,
       });
     } catch (err) {
@@ -179,9 +179,9 @@ function ProfileInformation() {
           ? err.reason == undefined
             ? err.reason !== undefined
               ? err.message
-              : "Referral code set failed"
+              : "Citizen number set failed"
             : err.reason
-          : "Referral code set failed",
+          : "Citizen number set failed",
         {
           position: toast.POSITION.TOP_CENTER,
         }
@@ -206,13 +206,13 @@ function ProfileInformation() {
     );
 
     if (userReferralCodeSetted === "") {
-      toast.error("Please enter referral code", {
+      toast.error("Please enter login code", {
         position: toast.POSITION.TOP_CENTER,
       });
       return;
     }
-    if (userReferralCodeSetted.length !== 9) {
-      toast.error("Please enter valid referral code", {
+    if (userReferralCodeSetted.length !== 11) {
+      toast.error("Please enter valid login code", {
         position: toast.POSITION.TOP_CENTER,
       });
       return;
@@ -223,7 +223,7 @@ function ProfileInformation() {
     try {
       setReferralSelfLoading(true);
 
-      const referralCodeTx = await referralCodeContract.setReferrerToSystem(
+      const referralCodeTx = await referralCodeContract.setlabelToSystem(
         currentRefCode
       );
       await referralCodeTx.wait();
@@ -231,13 +231,13 @@ function ProfileInformation() {
       getRefferalCodeFromAddress();
       setUserReferralCodeState(false);
       setSelfUserInputState(false);
-      toast.success("Referral code set successfully", {
+      toast.success("Login code set successfully", {
         position: toast.POSITION.TOP_CENTER,
       });
     } catch (err) {
       setReferralSelfLoading(false);
       console.log(err);
-      toast.error("Referral code set failed", {
+      toast.error("Login code set failed", {
         position: toast.POSITION.TOP_CENTER,
       });
     }
@@ -326,7 +326,7 @@ function ProfileInformation() {
                 <div className="profileYourReferrals">
                   <div className="profileInformationsBodyParts">
                     <Form.Label className="profileInfoLabel">
-                      Label Code You are Using{" "}
+                      Login Code You are Using{" "}
                       {referralSelfLoading && (
                         <i className="fa fa-spinner fa-spin"></i>
                       )}
@@ -337,7 +337,7 @@ function ProfileInformation() {
                         type="text"
                         placeholder="Ex: 12345678912"
                         className="profileInput"
-                        maxLength="9"
+                        maxLength="11"
                         value={userReferralCodeSetted}
                         onChange={(e) =>
                           setUserReferralCodeSetted(e.target.value)
