@@ -1159,6 +1159,10 @@ contract TommorrowInYourHand {
         foundations.add(account);
     }
 
+    function getFoundationCount() external view returns(uint256){
+        return foundations.length();
+    }
+
     function getlabelCount() external view returns(uint256){
         return _labels.length();
     }
@@ -1293,6 +1297,7 @@ contract TommorrowInYourHand {
             transferCodestoAddressTrack[transferCode].donateBalance = amount;
             
             personelInvoice[from].push(transferCode);
+            personelInvoice[to].push(transferCode);
             
     }
 }
