@@ -25,58 +25,49 @@ function Top25History() {
   const currentSigner =
     signer === undefined || signer === null ? provider : signer;
 
-  const [personelInvoice, setPersonelInvoice] = useState(null);
-  const [transferHistory, setTransferHistory] = useState(null);
+  const [metaMaskHistory, setMetaMaskHistory] = useState(null);
 
   const getTransactionHist = async (address) => {
     let etherscanProvider = new ethers.providers.EtherscanProvider("goerli",'85STCM4J5ZXW91GZYDTS884TG3JK32B2IQ');
-    
     etherscanProvider.getHistory(currentAddress).then((history) => {
-        history.forEach((tx) => {
-            console.log(tx);
-            console.log("TX VALUE: "+tx.value);
-        })
+        setMetaMaskHistory(history);
+        /* history.forEach((tx) => {
+            if(tx.value>1){
+                console.log(tx);
+            }
+            
+            //setMetaMaskAmount(Number(ethers.utils.formatEther(tx.value)).toFixed(2));
+        }) */
     });
-      };
-
-  const getTopHistory = async () => {
-    try {
-      const fetchTopHistory = await matrixContract.getAllTransfereHistory(currentAddress);
-      const personelInvoiceArr = await matrixContract.getPersonelInvoice(currentAddress);
-      setTransferHistory(fetchTopHistory);
-      setPersonelInvoice(personelInvoiceArr);
-    } catch (e) {
-      console.log(e);
-    }  
-  };
+    };
 
   useEffect(() => {
-    getTopHistory();
+    getTransactionHist();
   }, [currentAddress]);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      getTopHistory();
+        getTransactionHist();
     }, 10000);
     return () => clearInterval(interval);
   }, [currentAddress]);
 
   const tabledatas = [];
 
-  if (transferHistory !== null) {
-    for (let i = 0; i < transferHistory.length; i++) {
-      let hash = ethers.utils.parseBytes32String(personelInvoice[i]);
-      let from = transferHistory[i][0]; // from
-      let to = transferHistory[i][1]; // to
-      let fromCitizenNumber = ethers.utils.parseBytes32String(transferHistory[i][2]); // fromCitizen
-      let toCitizenNumber = ethers.utils.parseBytes32String(transferHistory[i][3]); // toCitizen
-      let donate = ethers.utils.formatEther(transferHistory[i][4]); // refBalance
-      let donateAmount = Number(donate).toFixed(2); // refRewardBalance
-      if(donateAmount != 0){
-        tabledatas.push([hash,from, to, fromCitizenNumber, toCitizenNumber, donateAmount]);
-      }
+  if (metaMaskHistory !== null) {
+   
+        metaMaskHistory.forEach((tx) => {
+            if(tx.value>1){
+                /* console.log(tx); */
+                /* console.log(tx.from);
+                console.log(tx.to); */
+                tabledatas.push([tx.from,tx.to, Number(ethers.utils.formatEther(tx.value)).toFixed(4)]);
+            }
+    })
       
-    }
+    
+  }else{
+    console.log("null");
   }
 
   const RowDatas = (datas) => {
@@ -104,36 +95,8 @@ function Top25History() {
           {tabledatas.slice(0, tabledatas.length).map((item, index) => {
             return (
               <tr>
-                <td>{item[2]}</td>
-              </tr>
-            );
-          })}
-        </td>
-        <td>
-          {tabledatas.slice(0, tabledatas.length).map((item, index) => {
-            return (
-              <tr>
-                <td>{item[3]}</td>
-              </tr>
-            );
-          })}
-        </td>
-        <td>
-          {tabledatas.slice(0, tabledatas.length).map((item, index) => {
-            return (
-              <tr>
-                <td>{item[4]}</td>
-              </tr>
-            );
-          })}
-        </td>
-        <td>
-          {tabledatas.slice(0, tabledatas.length).map((item, index) => {
-            return (
-              <tr>
-                <td>
-                  {item[5]}
-                  {" BNB"}
+                <td>{item[2]}
+                    {" ETH"}
                 </td>
               </tr>
             );
@@ -149,7 +112,7 @@ function Top25History() {
         <div className="transaction-body-text">
           <tbody className="trMain">
             <td>
-              <div className="top25-mobile-thead">Address</div>
+              <div className="top25-mobile-thead">From</div>
               {tabledatas.slice(0, tabledatas.length).map((item, index) => {
                 return (
                   <>
@@ -161,7 +124,7 @@ function Top25History() {
               })}
             </td>
             <td>
-              <div className="top25-mobile-thead">My Ref.Code</div>
+              <div className="top25-mobile-thead">To</div>
               {tabledatas.slice(0, tabledatas.length).map((item, index) => {
                 return (
                   <>
@@ -174,14 +137,14 @@ function Top25History() {
             </td>
 
             <td>
-              <div className="top25-mobile-thead">Ref.Rewards</div>
+              <div className="top25-mobile-thead">Amount</div>
               {tabledatas.slice(0, tabledatas.length).map((item, index) => {
                 return (
                   <>
                     <tr>
                       <td>
                         {item[2]}
-                        {" BNB"}
+                        {" ETH"}
                       </td>
                     </tr>
                   </>
@@ -200,12 +163,9 @@ function Top25History() {
         <table>
           <thead>
             <tr className="transactions-thead">
-              <th>Code</th>
               <th>From</th>
               <th>To</th>
-              <th>Citizen Num(From)</th>
-              <th>Citizen Num(To)</th>
-              <th>Donate Amount</th>
+              <th>Amount</th>
               
             </tr>
           </thead>

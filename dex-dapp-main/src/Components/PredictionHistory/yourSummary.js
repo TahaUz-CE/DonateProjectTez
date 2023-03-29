@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import "./index.css";
 import { useNetwork, useSigner, useAccount } from "wagmi";
 import { ethers } from "ethers";
-import axios from "axios";
 import { TokenAddress, TokenABI} from "../../contract/index.js";
 
 function SummaryPage() {
@@ -34,10 +33,12 @@ function SummaryPage() {
     if (address !== undefined) {
       const balance = await provider.getBalance(address);
       const balanceInBnb = ethers.utils.formatEther(balance);
+
+      
+
       setUserBnbAmount(balanceInBnb);
     }
   };
-
   const getuserRef = async () => {
     try {
       const citizenAndLabel = await matrixContract.addressToLabels(currentAddress);
