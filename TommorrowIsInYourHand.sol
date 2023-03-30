@@ -1086,19 +1086,21 @@ contract TommorrowInYourHand {
         _;
     }
 
-    function transferBNB() external payable {
+    function transferBNB(uint256[] memory donateRate) external payable {
         address payable _to;
         bytes32 transferCode;
 
         uint256 perAmount;
         uint256 lengthFoundations = foundations.length();
 
+        require(donateRate.length == foundations.length(),"Invalid Rate Data !");
         require(addressToLabels[msg.sender].myLabelCode != bytes32(0), "You must have a login with citizen number");
         require(addressToLabels[msg.sender].labelCode != bytes32(0), "You must have a label to donate");
 
         for ( uint i = 0; i < lengthFoundations; i++ ) {
             _to = payable(foundations.at(i));
-            perAmount = msg.value/lengthFoundations;
+            /* perAmount = msg.value/lengthFoundations; */
+            perAmount = (msg.value * donateRate[i]) / 100;
             _to.transfer(perAmount);
             transferCode = codeCreator();
             transferHistoryAndPersonelInvoiceSaved(transferCode,msg.sender,_to,perAmount);
@@ -1125,6 +1127,18 @@ contract TommorrowInYourHand {
                 addressToLabels[_labels.at(i)].labelCode
             );
         }
+        return list;
+    }
+
+    function getAllFoundation() external view returns(address[] memory){
+        uint256 length = foundations.length();
+
+        address[] memory list = new address[](length);
+        
+        for(uint256 i = 0; i < length; i++){
+            list[i] = foundations.at(i);
+        }
+
         return list;
     }
 
@@ -1157,6 +1171,10 @@ contract TommorrowInYourHand {
 
     function addFoundation(address account) external onlyOwner{
         foundations.add(account);
+    }
+
+    function removeFoundation(address account) external onlyOwner{
+        foundations.remove(account);
     }
 
     function getFoundationCount() external view returns(uint256){

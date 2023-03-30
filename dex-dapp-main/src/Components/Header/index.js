@@ -67,6 +67,30 @@ function Header() {
               </NavLink>
             )}
 
+            {splitLocation === "/" ? (
+              <NavLink
+                className={
+                  splitLocation === "/foundation"
+                    ? "navBarLinkActive"
+                    : "navBarLink"
+                }
+                // style={isActiveLink}
+                to="/foundation"
+              >
+                Foundation
+              </NavLink>
+            ) : (
+              <NavLink
+                className={
+                  splitLocation === "/" ? "navBarLinkActive" : "navBarLink"
+                }
+                to="/"
+                // style={isActiveLink}
+              >
+                
+              </NavLink>
+            )}
+
             <NavLink className="navBarLink">
               <ConnectWallet />
             </NavLink>

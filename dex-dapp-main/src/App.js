@@ -4,6 +4,7 @@ import Header from "./Components/Header";
 import Footer from "./Components/Footer";
 import Referral from "./Pages/Referral";
 import Dashboard from "./Pages/Dashboard";
+import Foundation from "./Pages/Foundation";
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer } from "react-toastify";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
@@ -28,6 +29,7 @@ function App() {
           <Route path="/" element={<Referral />} />
           <Route path="*" element={<NotFound />} />
           <Route path="dashboard" element={<Dashboard />} />
+          <Route path="foundation" element={<Foundation />} />
         </Routes>
         <Footer />
       </BrowserRouter>
