@@ -13,7 +13,7 @@
 
 @media (max-width: 1920px) {
   .transactions {
-    width: 75%;
+    width: 90%;
   }
 }
 @media (max-width: 1670px) {
@@ -44,7 +44,7 @@
   
  
   color: #dee1e6;
-  font-weight: 400 !important;
+  font-weight: 500 !important;
 }
 .transacions-logo-content {
   display: flex;
@@ -133,7 +133,7 @@ table {
     display: flex;
     flex-direction: row;
     color: #03150c;
-    font-weight: 400 !important;
+    font-weight: 500 !important;
   }
 }
 

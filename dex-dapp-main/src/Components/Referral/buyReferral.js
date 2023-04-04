@@ -255,7 +255,7 @@ function BuyReferralsCard() {
                       )+"]"}</div>
                           <input
                             type="text"
-                            placeholder="0.0"
+                            placeholder="%0.0"
                             className="buyReferralsInput"
                             value={inputValue}
                             onChange={event => handleChange(index, event)}

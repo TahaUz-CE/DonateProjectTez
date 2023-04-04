@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "./index.css";
 import { useNetwork, useSigner, useAccount } from "wagmi";
-
+import { Link } from 'react-router-dom';
 import { ethers } from "ethers";
 import { TokenAddress, TokenABI } from "../../contract/index.js";
 
@@ -95,7 +95,7 @@ function Top25History() {
           {tabledatas.slice(0, tabledatas.length).map((item, index) => {
             return (
               <tr>
-                <td>{item[1]}</td>
+                <td><Link to={"https://testnet.bscscan.com/address/"+item[1]} style={{ textDecoration: 'none' , color: 'white'}} target="_blank">{item[1]}</Link></td>
               </tr>
             );
           })}
@@ -104,7 +104,7 @@ function Top25History() {
           {tabledatas.slice(0, tabledatas.length).map((item, index) => {
             return (
               <tr>
-                <td>{item[2]}</td>
+                <td><Link to={"https://testnet.bscscan.com/address/"+item[2]} style={{ textDecoration: 'none' , color: 'white'}} target="_blank">{item[2]}</Link></td>
               </tr>
             );
           })}

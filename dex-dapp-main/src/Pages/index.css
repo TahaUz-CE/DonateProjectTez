@@ -51,6 +51,20 @@
   align-items: baseline;
 }
 
+.mainDashboardTitle {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 4rem;
+  margin-top: 1.5rem;
+  font-weight: 800 !important;
+
+  margin-bottom: 1.5rem;
+  background: linear-gradient(280deg, #f7f6f9 49.3%, #f7f6f9 89.09%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
 .dashboardTitle {
   display: flex;
   justify-content: center;

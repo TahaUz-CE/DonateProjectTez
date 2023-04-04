@@ -1055,6 +1055,7 @@ contract TommorrowInYourHand {
 
     EnumerableSet.AddressSet private _labels;
     EnumerableSet.AddressSet private foundations;
+    EnumerableSet.AddressSet private commercialFirms;
 
     address public _owner;
     address public  projectWallet;
@@ -1142,6 +1143,18 @@ contract TommorrowInYourHand {
         return list;
     }
 
+    function getAllCommercialFirms() external view returns(address[] memory){
+        uint256 length = commercialFirms.length();
+
+        address[] memory list = new address[](length);
+        
+        for(uint256 i = 0; i < length; i++){
+            list[i] = commercialFirms.at(i);
+        }
+
+        return list;
+    }
+
     function getAllTransfereHistory(address _user) external view returns(TransferHistory[] memory){
         uint256 length = personelInvoice[_user].length;
 
@@ -1177,8 +1190,20 @@ contract TommorrowInYourHand {
         foundations.remove(account);
     }
 
+    function addCommercialFirms(address account) external onlyOwner{
+        commercialFirms.add(account);
+    }
+
+    function removeCommercialFirms(address account) external onlyOwner{
+        commercialFirms.remove(account);
+    }
+
     function getFoundationCount() external view returns(uint256){
         return foundations.length();
+    }
+
+    function getCommercialFirmsCount() external view returns(uint256){
+        return commercialFirms.length();
     }
 
     function getlabelCount() external view returns(uint256){
