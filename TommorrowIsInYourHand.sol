@@ -1029,7 +1029,9 @@ contract TommorrowInYourHand {
     struct Label{
         bytes32 myLabelCode;
         bytes32 labelCode;
+        bytes32 userName;
         uint256 totalDonate;
+        uint256 totalSpending;
     }
 
     /* struct LabelInfo{
@@ -1051,6 +1053,8 @@ contract TommorrowInYourHand {
         bytes32 myLabelCode;
         bytes32 labelCode;
         uint256 donateBalance;
+        bytes32 fromUserName;
+        bytes32 toUserName;
     }
 
     EnumerableSet.AddressSet private _labels;
@@ -1073,6 +1077,8 @@ contract TommorrowInYourHand {
     // Her bir transferin kodu olucak böylelikle aynı kişiye yollanan transferler farklılaşmış olucak
     mapping(bytes32 => TransferHistory) public transferCodestoAddressTrack;
 
+    mapping(address => bool) private _isFoundation;
+
     uint public randNonce = 0;
 
     constructor () {
@@ -1080,10 +1086,16 @@ contract TommorrowInYourHand {
         _owner = msgSender;
         projectWallet = 0xBA55a8afDFEd245E53B8bB87C8eB6F1d976cBDAE;
         foundations.add(projectWallet);
+        _isFoundation[projectWallet] = true;
     }
 
     modifier onlyOwner() {
         require(_owner == msg.sender, "Ownable: caller is not the owner");
+        _;
+    }
+
+    modifier onlyFoundation() {
+        require(_isFoundation[msg.sender], "Ownable: caller is not the foundation");
         _;
     }
 
@@ -1103,11 +1115,31 @@ contract TommorrowInYourHand {
             /* perAmount = msg.value/lengthFoundations; */
             perAmount = (msg.value * donateRate[i]) / 100;
             _to.transfer(perAmount);
+            addressToLabels[_to].totalDonate = perAmount;
             transferCode = codeCreator();
             transferHistoryAndPersonelInvoiceSaved(transferCode,msg.sender,_to,perAmount);
         }
 
         addressToLabels[msg.sender].totalDonate += msg.value;     
+        
+    }
+
+    function transferFoundationBNB(address payable _to) external payable onlyFoundation{
+        
+        bytes32 transferCode;
+
+        uint256 perAmount;
+
+        require(addressToLabels[msg.sender].myLabelCode != bytes32(0), "You must have a login with citizen number");
+        require(addressToLabels[msg.sender].labelCode != bytes32(0), "You must have a label to donate");
+
+        perAmount = msg.value; 
+        _to.transfer(perAmount);
+        transferCode = codeCreator();
+        transferHistoryAndPersonelInvoiceSaved(transferCode,msg.sender,_to,perAmount);
+       
+        addressToLabels[msg.sender].totalSpending += msg.value;
+        addressToLabels[_to].totalSpending += msg.value;  
         
     }
 
@@ -1166,7 +1198,9 @@ contract TommorrowInYourHand {
                 transferCodestoAddressTrack[personelInvoice[_user][i]].toAddress,
                 transferCodestoAddressTrack[personelInvoice[_user][i]].myLabelCode,
                 transferCodestoAddressTrack[personelInvoice[_user][i]].labelCode,
-                transferCodestoAddressTrack[personelInvoice[_user][i]].donateBalance
+                transferCodestoAddressTrack[personelInvoice[_user][i]].donateBalance,
+                transferCodestoAddressTrack[personelInvoice[_user][i]].fromUserName,
+                transferCodestoAddressTrack[personelInvoice[_user][i]].toUserName
             );
         }
 
@@ -1184,10 +1218,12 @@ contract TommorrowInYourHand {
 
     function addFoundation(address account) external onlyOwner{
         foundations.add(account);
+        _isFoundation[account] = true;
     }
 
     function removeFoundation(address account) external onlyOwner{
         foundations.remove(account);
+        _isFoundation[account] = false;
     }
 
     function addCommercialFirms(address account) external onlyOwner{
@@ -1227,17 +1263,6 @@ contract TommorrowInYourHand {
                 _user,
                 addressToLabels[_user].myLabelCode,
                 addressToLabels[_user].labelCode
-        );
-    }
-
-    function getLastTransferHistoryByAddress(address _user) external view returns(TransferHistory memory){
-
-        return TransferHistory(
-                _user,
-                LabelCodestoAddress[addressToLabels[_user].labelCode],
-                addressToLabels[_user].myLabelCode,
-                addressToLabels[_user].labelCode ,
-                0
         );
     }
 
@@ -1301,6 +1326,18 @@ contract TommorrowInYourHand {
         
     }
 
+    function setUserNameToSystem(string memory _userName) external{
+        
+        bytes32 _result;
+
+        assembly {
+            _result := mload(add(_userName, 32))
+        }
+
+        addressToLabels[address(msg.sender)].userName = _result;
+        
+    }
+
     function random() public returns (uint) {
         // Defining a function to generate
         // a random number
@@ -1338,6 +1375,8 @@ contract TommorrowInYourHand {
             transferCodestoAddressTrack[transferCode].myLabelCode = addressToLabels[from].myLabelCode;
             transferCodestoAddressTrack[transferCode].labelCode = addressToLabels[to].myLabelCode;
             transferCodestoAddressTrack[transferCode].donateBalance = amount;
+            transferCodestoAddressTrack[transferCode].fromUserName = addressToLabels[from].userName;
+            transferCodestoAddressTrack[transferCode].toUserName = addressToLabels[to].userName;
             
             personelInvoice[from].push(transferCode);
             personelInvoice[to].push(transferCode);

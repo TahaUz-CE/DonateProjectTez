@@ -50,22 +50,9 @@ function BuyReferralsCard() {
 
   const [userMatrixAmount, setUserMatrixAmount] = useState(null);
 
-  const getUserMatrixBalance = async () => {
-    if (address !== undefined) {
-      const matrixContract = new ethers.Contract(
-        TokenAddress,
-        TokenABI,
-        provider
-      );
-      const matrixBalance = await matrixContract.balanceOf(address);
-      const matrixBalanceInMatrix = ethers.utils.formatEther(matrixBalance);
-      setUserMatrixAmount(matrixBalanceInMatrix);
-    }
-  };
 
   useEffect(() => {
     getUserBnbBalance();
-    getUserMatrixBalance();
   }, [address, chainRpcUrl]);
 
 
@@ -78,6 +65,9 @@ function BuyReferralsCard() {
   const [sendRateValue2, setSendRateValue2] = useState([]);
   const [foundationName, setFoundationName] = useState([]);
   const [commercialName, setCommercialName] = useState([]);
+  const [commercialUserName, setCommercialUserName] = useState([]);
+  const [foundationUserName, setFoundationUserName] = useState([]);
+  const [ownerAddress, setOwnerAddress] = useState(null);
 
   const handleChange = (index, event) => {
     const newInputValues = [...sendRateValue];
@@ -85,7 +75,7 @@ function BuyReferralsCard() {
     setSendRateValue(newInputValues);
   };
 
-  
+
 
   const handleAddInput = async () => {
     const tokenContract = new ethers.Contract(TokenAddress, TokenABI, provider);
@@ -93,19 +83,32 @@ function BuyReferralsCard() {
     const commercialLength = await tokenContract.getCommercialFirmsCount();
     const foundationAddress = await tokenContract.getAllFoundation();
     const commercialAddress = await tokenContract.getAllCommercialFirms();
+    const owner = await tokenContract._owner();
+    setOwnerAddress(owner);
+    const userUsername = await tokenContract.addressToLabels(currentAddress);
+    const activeUsername = ethers.utils.parseBytes32String(userUsername.userName);
+
     setFoundationName(foundationAddress);
     setCommercialName(commercialAddress);
-    console.log(Number(foundationLength));
+    /* console.log(Number(foundationLength)); */
     setSendRateValue([]);
     setSendRateValue2([]);
+    setFoundationUserName([]);
+    setCommercialUserName([]);
     for (let i = 0; i < Number(foundationLength); i++) {
       setSendRateValue(sendRateValue => [...sendRateValue, '']);
+      const userUsername = await tokenContract.addressToLabels(foundationAddress[i]);
+      /* console.log(ethers.utils.parseBytes32String(userUsername.userName)); */
+      setFoundationUserName(foundationUserName => [...foundationUserName, ethers.utils.parseBytes32String(userUsername.userName).toUpperCase()]);
       /* setSendRateValue([...sendRateValue,'']); */
     }
     for (let i = 0; i < Number(commercialLength); i++) {
-        setSendRateValue2(sendRateValue2 => [...sendRateValue2, '']);
-        /* setSendRateValue([...sendRateValue,'']); */
-      }
+      setSendRateValue2(sendRateValue2 => [...sendRateValue2, '']);
+      const userUsername = await tokenContract.addressToLabels(commercialAddress[i]);
+      setCommercialUserName(commercialUserName => [...commercialUserName, ethers.utils.parseBytes32String(userUsername.userName).toUpperCase()]);
+      /* setSendRateValue([...sendRateValue,'']); */
+    }
+
   };
 
 
@@ -116,7 +119,7 @@ function BuyReferralsCard() {
         getUserBnbBalance()
         return x;
       })(),
-      10000
+      30000
     );
 
     return () => clearInterval(interval);
@@ -141,7 +144,7 @@ function BuyReferralsCard() {
 
   useEffect(() => {
     getuserReferralCodeFromAddress(address);
-    
+
   }, [address]);
 
   const [buyLoading, setBuyLoading] = useState(false);
@@ -153,104 +156,104 @@ function BuyReferralsCard() {
     const tokenContract = new ethers.Contract(TokenAddress, TokenABI, provider);
     try {
 
-        await tokenContract.connect(currentSigner).addFoundation(
-            foundation
-          );
-    }catch (error) {
-        console.log(error);
-        toast.error(
-          error
-            ? error.reason === undefined
-              ? error.message !== undefined
-                ? error.message
-                : "Something went wrong"
-              : error.reason
-            : "Something went wrong",
-  
-          {
-            position: toast.POSITION.TOP_CENTER,
-          }
-        );
-      }
-    
+      await tokenContract.connect(currentSigner).addFoundation(
+        foundation
+      );
+    } catch (error) {
+      console.log(error);
+      toast.error(
+        error
+          ? error.reason === undefined
+            ? error.message !== undefined
+              ? error.message
+              : "Something went wrong"
+            : error.reason
+          : "Something went wrong",
+
+        {
+          position: toast.POSITION.TOP_CENTER,
+        }
+      );
+    }
+
   };
 
   const handleFoundationRemove = async () => {
     const tokenContract = new ethers.Contract(TokenAddress, TokenABI, provider);
     try {
 
-        await tokenContract.connect(currentSigner).removeFoundation(
-            foundation
-          );
-    }catch (error) {
-        console.log(error);
-        toast.error(
-          error
-            ? error.reason === undefined
-              ? error.message !== undefined
-                ? error.message
-                : "Something went wrong"
-              : error.reason
-            : "Something went wrong",
-  
-          {
-            position: toast.POSITION.TOP_CENTER,
-          }
-        );
-      }
-    
+      await tokenContract.connect(currentSigner).removeFoundation(
+        foundation
+      );
+    } catch (error) {
+      console.log(error);
+      toast.error(
+        error
+          ? error.reason === undefined
+            ? error.message !== undefined
+              ? error.message
+              : "Something went wrong"
+            : error.reason
+          : "Something went wrong",
+
+        {
+          position: toast.POSITION.TOP_CENTER,
+        }
+      );
+    }
+
   };
 
   const handleCommercialAdd = async () => {
     const tokenContract = new ethers.Contract(TokenAddress, TokenABI, provider);
     try {
 
-        await tokenContract.connect(currentSigner).addCommercialFirms(
-            commercial
-          );
-    }catch (error) {
-        console.log(error);
-        toast.error(
-          error
-            ? error.reason === undefined
-              ? error.message !== undefined
-                ? error.message
-                : "Something went wrong"
-              : error.reason
-            : "Something went wrong",
-  
-          {
-            position: toast.POSITION.TOP_CENTER,
-          }
-        );
-      }
-    
+      await tokenContract.connect(currentSigner).addCommercialFirms(
+        commercial
+      );
+    } catch (error) {
+      console.log(error);
+      toast.error(
+        error
+          ? error.reason === undefined
+            ? error.message !== undefined
+              ? error.message
+              : "Something went wrong"
+            : error.reason
+          : "Something went wrong",
+
+        {
+          position: toast.POSITION.TOP_CENTER,
+        }
+      );
+    }
+
   };
 
   const handleCommercialRemove = async () => {
     const tokenContract = new ethers.Contract(TokenAddress, TokenABI, provider);
     try {
 
-        await tokenContract.connect(currentSigner).removeCommercialFirms(
-            commercial
-          );
-    }catch (error) {
-        console.log(error);
-        toast.error(
-          error
-            ? error.reason === undefined
-              ? error.message !== undefined
-                ? error.message
-                : "Something went wrong"
-              : error.reason
-            : "Something went wrong",
-  
-          {
-            position: toast.POSITION.TOP_CENTER,
-          }
-        );
-      }
-    
+      await tokenContract.connect(currentSigner).removeCommercialFirms(
+        commercial
+      );
+    } catch (error) {
+      console.log(error);
+      toast.error(
+        error
+          ? error.reason === undefined
+            ? error.message !== undefined
+              ? error.message
+              : "Something went wrong"
+            : error.reason
+          : "Something went wrong",
+
+        {
+          position: toast.POSITION.TOP_CENTER,
+        }
+      );
+    }
+
   };
 
   const handleFoundation = async (value, mode) => {
@@ -265,19 +268,19 @@ function BuyReferralsCard() {
 
   const getTransactionHist = async (address) => {
 
-    let etherscanProvider = new ethers.providers.EtherscanProvider("goerli",'85STCM4J5ZXW91GZYDTS884TG3JK32B2IQ');
+    let etherscanProvider = new ethers.providers.EtherscanProvider("goerli", '85STCM4J5ZXW91GZYDTS884TG3JK32B2IQ');
     const tokenContract = new ethers.Contract(TokenAddress, TokenABI, provider);
     const foundationLength = await tokenContract.getFoundationCount();
     const foundationAddress = await tokenContract.getAllFoundation();
     setMetaMaskHistory([]);
     foundationAddress.forEach((foundAdress) => {
-        console.log("asdasd:"+foundAdress);
-        etherscanProvider.getHistory(foundAdress).then((history) => {
-            setMetaMaskHistory(metaMaskHistory => [...metaMaskHistory,history]);
-            console.log(history);
-        });
+      console.log("asdasd:" + foundAdress);
+      etherscanProvider.getHistory(foundAdress).then((history) => {
+        setMetaMaskHistory(metaMaskHistory => [...metaMaskHistory, history]);
+        console.log(history);
+      });
     })
-    };
+  };
 
   useEffect(() => {
     handleAddInput();
@@ -286,62 +289,73 @@ function BuyReferralsCard() {
 
   useEffect(() => {
     const interval = setInterval(() => {
-        handleAddInput();
-        getTransactionHist();
-    }, 10000);
+      handleAddInput();
+      getTransactionHist();
+    }, 30000);
     return () => clearInterval(interval);
   }, [currentAddress]);
 
   const tabledatas = [];
 
   if (metaMaskHistory !== null) {
-   
+
     console.log(metaMaskHistory);
     let i = 0;
     metaMaskHistory.forEach((foundationHisto) => {
-        console.log(foundationHisto);
-        console.log(foundationName[i]);
-        foundationHisto.forEach((tx) => {
-            let check0 = false;
-                foundationName.forEach((addressCheck) => {
-                    if(tx.from === addressCheck){
-                        check0 = true;
-                    }
-                })
-            if(tx.value>1 /* && tx.from === foundationName[i] */ && check0 === true){
-                /* console.log(tx); */
-                /* console.log(tx.from);
-                console.log(tx.to); */
-                let check = false;
-                commercialName.forEach((addressCheck) => {
-                    if(tx.to === addressCheck){
-                        check = true;
-                    }
-                })
-                let check1 = false;
-                tabledatas.forEach((row) => {
-                    if(tx.from === row[0] && tx.to === row[1] && Number(ethers.utils.formatEther(tx.value)).toFixed(5) === row[2]){
-                        check1 = true;
-                    }
-                })
-                if(check && !check1){
-                    tabledatas.push([tx.from,tx.to, Number(ethers.utils.formatEther(tx.value)).toFixed(5),"Approved"]);
-                }else if(!check && !check1){
-                    tabledatas.push([tx.from,tx.to, Number(ethers.utils.formatEther(tx.value)).toFixed(5),"Unapproved"]);
-                }
-                
+      console.log(foundationHisto);
+      console.log(foundationName[i]);
+      foundationHisto.forEach((tx) => {
+        let check0 = false;
+        let userNameFrom = "";
+
+        const indexFrom = foundationName.indexOf(tx.from);
+
+        if (indexFrom !== -1) {
+          check0 = true;
+          userNameFrom = foundationUserName[indexFrom]
+        }
+
+        if (tx.value > 1 /* && tx.from === foundationName[i] */ && check0 === true) {
+          /* console.log(tx); */
+          /* console.log(tx.from);
+          console.log(tx.to); */
+          let check = false;
+          let userNameTo = "";
+          const indexTo = commercialName.indexOf(tx.to);
+            if (indexTo !== -1) {
+              check = true;
+              userNameTo = commercialUserName[indexTo]
             }
+          const indexFromTo = foundationName.indexOf(tx.to);
+            if (indexFromTo !== -1) {
+              check = true;
+              userNameTo = foundationUserName[indexFromTo]
+            }
+          
+          let check1 = false;
+          tabledatas.forEach((row) => {
+            if (tx.from === row[0] && tx.to === row[1] && Number(ethers.utils.formatEther(tx.value)).toFixed(5) === row[2]) {
+              check1 = true;
+            }
+          })
+          if (check && !check1) {
+            tabledatas.push([userNameFrom, userNameTo, Number(ethers.utils.formatEther(tx.value)).toFixed(5), "Approved"]);
+          } else if (!check && !check1) {
+            tabledatas.push([userNameFrom, tx.to, Number(ethers.utils.formatEther(tx.value)).toFixed(5), "Unapproved"]);
+          }
+
+        }
+      })
+      i++;
     })
-    i++;
-    })
-        
-      
-    
-  }else{
+
+
+
+  } else {
     console.log("null");
   }
 
-  
+
   const RowDatas = (datas) => {
     return (
       <tr>
@@ -349,7 +363,8 @@ function BuyReferralsCard() {
           {tabledatas.slice(0, tabledatas.length).map((item, index) => {
             return (
               <tr>
-                <td><Link to={"https://goerli.etherscan.io/address/"+item[0]} style={{ textDecoration: 'none' , color: 'white'}} target="_blank">{item[0]}</Link></td>
+                <td>{item[0]}</td>
+                {/* <td><Link to={"https://goerli.etherscan.io/address/" + item[0]} style={{ textDecoration: 'none', color: 'white' }} target="_blank">{item[0]}</Link></td> */}
               </tr>
             );
           })}
@@ -358,7 +373,8 @@ function BuyReferralsCard() {
           {tabledatas.slice(0, tabledatas.length).map((item, index) => {
             return (
               <tr>
-                <td><Link to={"https://goerli.etherscan.io/address/"+item[1]} style={{ textDecoration: 'none' , color: 'white'}} target="_blank">{item[1]}</Link></td>
+                <td>{item[1]}</td>
+                {/* <td><Link to={"https://goerli.etherscan.io/address/" + item[1]} style={{ textDecoration: 'none', color: 'white' }} target="_blank">{item[1]}</Link></td> */}
               </tr>
             );
           })}
@@ -367,7 +383,7 @@ function BuyReferralsCard() {
           {tabledatas.slice(0, tabledatas.length).map((item, index) => {
             return (
               <tr>
-                <td>{item[2]+" ETH"}
+                <td>{item[2] + " ETH"}
                 </td>
               </tr>
             );
@@ -398,7 +414,8 @@ function BuyReferralsCard() {
                 return (
                   <>
                     <tr>
-                    <td><Link>{item[0].slice(0, 5) + "..." + item[0].slice(-4)}</Link></td>
+                    <td>{item[0]}</td>
+                      {/* <td><Link>{item[0].slice(0, 5) + "..." + item[0].slice(-4)}</Link></td> */}
                     </tr>
                   </>
                 );
@@ -455,30 +472,30 @@ function BuyReferralsCard() {
   return (
     <>
       <Container>
-      <Row>
-      <Col><div className="dashboardTitle">Foundations Wallet List</div>
-                  {sendRateValue.map((inputValue, index) => (
-                        <div key={index}>
-                          <div className="buyReferralsPartLeftText">{"Foundation "+(index+1)+"    "+"["+foundationName[index]+"]"}</div>
-                          
-                        </div>
-                      ))}
-    </Col>
-      <Col>
-      <div className="dashboardTitle">Commercial Wallet List</div>
-                  {sendRateValue2.map((inputValue, index) => (
-                        <div key={index}>
-                          <div className="buyReferralsPartLeftText">{"Commercial "+(index+1)+"    "+"["+commercialName[index]+"]"}</div>
-                          
-                        </div>
-                      ))}
-    </Col>
-      </Row>
         <Row>
+          <Col><div className="dashboardTitle">Foundations Wallet List</div>
+            {sendRateValue.map((inputValue, index) => (
+              <div key={index}>
+                {foundationUserName[index] !== undefined && (<div className="buyReferralsPartLeftText">{foundationUserName[index] + " [" + foundationName[index] + "]"}</div>)}
+
+              </div>
+            ))}
+          </Col>
           <Col>
-          
+            <div className="dashboardTitle">Commercial Wallet List</div>
+            {sendRateValue2.map((inputValue, index) => (
+              <div key={index}>
+                {commercialUserName[index] !== undefined && (<div className="buyReferralsPartLeftText">{commercialUserName[index] + " [" + commercialName[index] + "]"}</div>)}
+
+              </div>
+            ))}
+          </Col>
+        </Row>
+        <Row>
+          {ownerAddress === currentAddress && (<Col>
+
             <div className="buyReferralsCardMain">
-            <div className="buySellTitle">{activeTab ? "FOUNDATION WALLET ADD" : "FOUNDATION WALLET REMOVE"}</div>
+              <div className="buySellTitle">{activeTab ? "FOUNDATION WALLET ADD" : "FOUNDATION WALLET REMOVE"}</div>
               <>
                 <div className="buyReferralsCardBody">
                   <div className="buyReferralsBnbPart">
@@ -503,12 +520,12 @@ function BuyReferralsCard() {
                         className="buyReferralsInput"
                         value={bnbValue}
                         onChange={(e) =>
-                            handleFoundation(e.target.value, "weth")
+                          handleFoundation(e.target.value, "weth")
                         }
                       />
                     </div>
-                    
-            <div className="finishRoundsButtons">
+
+                    <div className="finishRoundsButtons">
                       <button
                         className="swapIconWrapper"
                         onClick={() => setActiveTab(!activeTab)}
@@ -520,47 +537,47 @@ function BuyReferralsCard() {
 
                 </div>
                 {activeTab ? (
-                    <>
+                  <>
                     {foundation !== null && foundation !== "" ? (
-                        <button
-                          className="buyReferralsButton"
-      
-                          onClick={() => handleFoundationAdd()}
-                        >
-                          ADD{" "}
-                          {buyLoading && <i className="fa fa-spinner fa-spin"></i>}
-                        </button>
-                      ) : (
-                        <button className="buyReferralsButtonOpa">ADD</button>
-                      )}
-                      </>
-                ):(
-                    <>
+                      <button
+                        className="buyReferralsButton"
+
+                        onClick={() => handleFoundationAdd()}
+                      >
+                        ADD{" "}
+                        {buyLoading && <i className="fa fa-spinner fa-spin"></i>}
+                      </button>
+                    ) : (
+                      <button className="buyReferralsButtonOpa">ADD</button>
+                    )}
+                  </>
+                ) : (
+                  <>
                     {foundation !== null && foundation !== "" ? (
-                        <button
-                          className="buyReferralsButton"
-      
-                          onClick={() => handleFoundationRemove()}
-                        >
-                          REMOVE{" "}
-                          {buyLoading && <i className="fa fa-spinner fa-spin"></i>}
-                        </button>
-                      ) : (
-                        <button className="buyReferralsButtonOpa">REMOVE</button>
-                      )}
-                      </>
+                      <button
+                        className="buyReferralsButton"
+
+                        onClick={() => handleFoundationRemove()}
+                      >
+                        REMOVE{" "}
+                        {buyLoading && <i className="fa fa-spinner fa-spin"></i>}
+                      </button>
+                    ) : (
+                      <button className="buyReferralsButtonOpa">REMOVE</button>
+                    )}
+                  </>
                 )}
-                
+
               </>
-              
+
             </div>
-            
-          </Col>
-          <Col>
-          
-          <div className="buyReferralsCardMain">
-          <div className="buySellTitle">{activeTab2 ? "COMMERCIAL WALLET ADD" : "COMMERCIAL WALLET REMOVE"}</div>
-          <>
+
+          </Col>)}
+          {ownerAddress === currentAddress && (<Col>
+
+            <div className="buyReferralsCardMain">
+              <div className="buySellTitle">{activeTab2 ? "COMMERCIAL WALLET ADD" : "COMMERCIAL WALLET REMOVE"}</div>
+              <>
                 <div className="buyReferralsCardBody">
                   <div className="buyReferralsBnbPart">
                     <div className="buyReferralsBnbPartUp">
@@ -584,12 +601,12 @@ function BuyReferralsCard() {
                         className="buyReferralsInput"
                         value={bnbValue}
                         onChange={(e) =>
-                            handleCommercial(e.target.value, "weth")
+                          handleCommercial(e.target.value, "weth")
                         }
                       />
                     </div>
-                    
-            <div className="finishRoundsButtons">
+
+                    <div className="finishRoundsButtons">
                       <button
                         className="swapIconWrapper"
                         onClick={() => setActiveTab2(!activeTab2)}
@@ -601,71 +618,72 @@ function BuyReferralsCard() {
 
                 </div>
                 {activeTab2 ? (
-                    <>
+                  <>
                     {foundation !== null && foundation !== "" ? (
-                        <button
-                          className="buyReferralsButton"
-      
-                          onClick={() => handleCommercialAdd()}
-                        >
-                          ADD{" "}
-                          {buyLoading && <i className="fa fa-spinner fa-spin"></i>}
-                        </button>
-                      ) : (
-                        <button className="buyReferralsButtonOpa">ADD</button>
-                      )}
-                      </>
-                ):(
-                    <>
+                      <button
+                        className="buyReferralsButton"
+
+                        onClick={() => handleCommercialAdd()}
+                      >
+                        ADD{" "}
+                        {buyLoading && <i className="fa fa-spinner fa-spin"></i>}
+                      </button>
+                    ) : (
+                      <button className="buyReferralsButtonOpa">ADD</button>
+                    )}
+                  </>
+                ) : (
+                  <>
                     {foundation !== null && foundation !== "" ? (
-                        <button
-                          className="buyReferralsButton"
-      
-                          onClick={() => handleCommercialRemove()}
-                        >
-                          REMOVE{" "}
-                          {buyLoading && <i className="fa fa-spinner fa-spin"></i>}
-                        </button>
-                      ) : (
-                        <button className="buyReferralsButtonOpa">REMOVE</button>
-                      )}
-                      </>
+                      <button
+                        className="buyReferralsButton"
+
+                        onClick={() => handleCommercialRemove()}
+                      >
+                        REMOVE{" "}
+                        {buyLoading && <i className="fa fa-spinner fa-spin"></i>}
+                      </button>
+                    ) : (
+                      <button className="buyReferralsButtonOpa">REMOVE</button>
+                    )}
+                  </>
                 )}
-                
+
               </>
-          </div>
-          </Col>
+            </div>
+          </Col>)}
         </Row>
-        
-        
+
+
+
         <div className="dashboardTitle">All Foundation Wallet Transfer History</div>
         <div className="transactionsWrapper">
-      <div className="transactions">
-        <table>
-          <thead>
-            <tr className="transactions-thead">
-              <th>From</th>
-              <th>To</th>
-              <th>Amount</th>
-              <th>Trust Rank</th>
-            </tr>
-          </thead>
-          <tbody className="transactions-tbody">
-            {[0].map((item, index) => (
-              <RowDatas item={item} key={index} />
-            ))}
-          </tbody>
-        </table>
-      </div>
+          <div className="transactions">
+            <table>
+              <thead>
+                <tr className="transactions-thead">
+                  <th>From</th>
+                  <th>To</th>
+                  <th>Amount</th>
+                  <th>Trust Rank</th>
+                </tr>
+              </thead>
+              <tbody className="transactions-tbody">
+                {[0].map((item, index) => (
+                  <RowDatas item={item} key={index} />
+                ))}
+              </tbody>
+            </table>
+          </div>
 
-      <div className="transactionsMobile">
-        {[0].map((item, index) => (
-          <RowTransactionsMobile item={item} key={index} />
-        ))}
-      </div>
-    </div>
+          <div className="transactionsMobile">
+            {[0].map((item, index) => (
+              <RowTransactionsMobile item={item} key={index} />
+            ))}
+          </div>
+        </div>
       </Container>
-      
+
     </>
   );
 }

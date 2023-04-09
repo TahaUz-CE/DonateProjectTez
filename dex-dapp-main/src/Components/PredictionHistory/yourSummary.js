@@ -18,6 +18,7 @@ function SummaryPage() {
   const [labelCode, setLabelCode] = useState(null);
   const [totalBalance, setTotalBalance] = useState(null);
   const [userBnbAmount, setUserBnbAmount] = useState(null);
+  const [userName, setUserName] = useState(null);
 
   const currentAddress =
     address === undefined
@@ -42,11 +43,12 @@ function SummaryPage() {
   const getuserRef = async () => {
     try {
       const citizenAndLabel = await matrixContract.addressToLabels(currentAddress);
-      
+      console.log(citizenAndLabel);
       let citizenNumber = ethers.utils.parseBytes32String(citizenAndLabel[0]);
       let labelCode = ethers.utils.parseBytes32String(citizenAndLabel[1]);
-      let totalBalance =Number(ethers.utils.formatEther(citizenAndLabel[2])).toFixed(4) ;
-      
+      let userNameGet = ethers.utils.parseBytes32String(citizenAndLabel[2]);
+      let totalBalance =Number(ethers.utils.formatEther(citizenAndLabel[3])).toFixed(4);
+      setUserName(userNameGet.toUpperCase());
       setToAddress(toAddress);
       setCitizenNumber(citizenNumber);
       setLabelCode(labelCode);
@@ -63,6 +65,7 @@ function SummaryPage() {
 
   const tabledatas = [
     [
+      userName,
       currentAddress,
       labelCode,
       userBnbAmount,
@@ -87,17 +90,6 @@ function SummaryPage() {
           {tabledatas.slice(0, tabledatas.length).map((item, index) => {
             return (
               <tr>
-                <td>
-                  {item[4]}
-                </td>
-              </tr>
-            );
-          })}
-        </td>
-        <td>
-          {tabledatas.slice(0, tabledatas.length).map((item, index) => {
-            return (
-              <tr>
                 <td>{item[1]}</td>
               </tr>
             );
@@ -107,7 +99,9 @@ function SummaryPage() {
           {tabledatas.slice(0, tabledatas.length).map((item, index) => {
             return (
               <tr>
-                <td>{Number(item[2]).toFixed(4)}{" BNB"}</td>
+                <td>
+                  {item[5]}
+                </td>
               </tr>
             );
           })}
@@ -116,7 +110,25 @@ function SummaryPage() {
           {tabledatas.slice(0, tabledatas.length).map((item, index) => {
             return (
               <tr>
-                <td>{item[3]}{" BNB"}</td>
+                <td>{item[2]}</td>
+              </tr>
+            );
+          })}
+        </td>
+        <td>
+          {tabledatas.slice(0, tabledatas.length).map((item, index) => {
+            return (
+              <tr>
+                <td>{Number(item[3]).toFixed(4)}{" BNB"}</td>
+              </tr>
+            );
+          })}
+        </td>
+        <td>
+          {tabledatas.slice(0, tabledatas.length).map((item, index) => {
+            return (
+              <tr>
+                <td>{item[4]}{" BNB"}</td>
               </tr>
             );
           })}
@@ -191,6 +203,7 @@ function SummaryPage() {
         <table>
           <thead>
             <tr className="transactions-thead">
+              <th>User Name</th>
               <th>My Address</th>
               <th>Citizen Number</th>
               <th>Login Code </th>

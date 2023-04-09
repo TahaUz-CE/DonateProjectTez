@@ -37,7 +37,7 @@ function Header() {
           <img src={HeaderLogo} />
 
           <NavLink className="navBarLink" to="/" relative="path">
-          Tomorrow Is in Your Hands
+            Tomorrow Is in Your Hands
           </NavLink>
         </Navbar.Brand>
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
@@ -61,7 +61,7 @@ function Header() {
                   splitLocation === "/" ? "navBarLinkActive" : "navBarLink"
                 }
                 to="/"
-                // style={isActiveLink}
+              // style={isActiveLink}
               >
                 Main Page
               </NavLink>
@@ -85,9 +85,57 @@ function Header() {
                   splitLocation === "/" ? "navBarLinkActive" : "navBarLink"
                 }
                 to="/"
-                // style={isActiveLink}
+              // style={isActiveLink}
               >
-                
+
+              </NavLink>
+            )}
+
+            {splitLocation === "/" ? (
+              <NavLink
+                className={
+                  splitLocation === "/foundationTracking"
+                    ? "navBarLinkActive"
+                    : "navBarLink"
+                }
+                // style={isActiveLink}
+                to="/foundationTracking"
+              >
+                Foundation Tracking
+              </NavLink>
+            ) : (
+              <NavLink
+                className={
+                  splitLocation === "/" ? "navBarLinkActive" : "navBarLink"
+                }
+                to="/"
+              // style={isActiveLink}
+              >
+
+              </NavLink>
+            )}
+
+            {splitLocation === "/" ? (
+              <NavLink
+                className={
+                  splitLocation === "/codeSearch"
+                    ? "navBarLinkActive"
+                    : "navBarLink"
+                }
+                // style={isActiveLink}
+                to="/codeSearch"
+              >
+                Code Search
+              </NavLink>
+            ) : (
+              <NavLink
+                className={
+                  splitLocation === "/" ? "navBarLinkActive" : "navBarLink"
+                }
+                to="/"
+              // style={isActiveLink}
+              >
+
               </NavLink>
             )}
 

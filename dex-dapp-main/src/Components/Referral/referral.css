@@ -533,7 +533,13 @@
   color: #ffffff;
   font-size: 0.875rem;
 }
-
+.totalDonateSpendTitle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #dddec2;
+  font-size: 1.3rem;
+}
 .buyReferralsCardFooterLeftText{
   color: #fff;
 }

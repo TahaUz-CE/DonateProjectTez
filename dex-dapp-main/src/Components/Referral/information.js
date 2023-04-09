@@ -35,6 +35,7 @@ function ProfileInformation() {
   const [referralSelfLoading, setReferralSelfLoading] = useState(false);
   const [userReferrerAddress, setUserReferrerAddress] = useState("");
   const [userReferralCodeSetted, setUserReferralCodeSetted] = useState("");
+  const [userNameSetted, setUserNameSetted] = useState("");
 
   const [userReferralCodeState, setUserReferralCodeState] = useState(
     getuserReferralCode === "" ? true : false
@@ -47,6 +48,7 @@ function ProfileInformation() {
   const handleSelfRefCode = async () => {
     setSelfUserInputState(true);
     setUserReferralCodeSetted("");
+    setUserNameSetted("");
   };
 
   useEffect(() => {
@@ -74,8 +76,30 @@ function ProfileInformation() {
     } catch (e) {}
   };
 
+  const [usingUsernameSetting, setUsingUsernameSetting] = useState("");
+  const getActiveUsername = async () => {
+    try {
+      const tokenContract = new ethers.Contract(
+        TokenAddress,
+        TokenABI,
+        provider
+      );
+
+      const userUsername = await tokenContract.addressToLabels(
+        currentAddress
+      );
+
+      const activeUsername = ethers.utils.parseBytes32String(
+        userUsername.userName
+      );
+
+      setUsingUsernameSetting(activeUsername.toUpperCase());
+    } catch (e) {}
+  };
+
   useEffect(() => {
     getActiveReferralCode();
+    getActiveUsername();
   }, [currentAddress]);
 
   // Your Referrals Code
@@ -110,7 +134,7 @@ function ProfileInformation() {
         currentAddress
       );
 
-      if (ethers.utils.parseBytes32String(referralCode[0]) == "") {
+      if (ethers.utils.parseBytes32String(referralCode[0]) === "") {
         setGetUserReferralCode("");
       } else {
         setGetUserReferralCode(
@@ -176,7 +200,7 @@ function ProfileInformation() {
       console.log(err);
       toast.error(
         err
-          ? err.reason == undefined
+          ? err.reason === undefined
             ? err.reason !== undefined
               ? err.message
               : "Citizen number set failed"
@@ -238,6 +262,60 @@ function ProfileInformation() {
       setReferralSelfLoading(false);
       console.log(err);
       toast.error("Login code set failed", {
+        position: toast.POSITION.TOP_CENTER,
+      });
+    }
+  };
+
+  const handleUserSelfName = async () => {
+    if (signer === undefined || signer === null) {
+      toast.error("Please connect your wallet", {
+        position: toast.POSITION.TOP_CENTER,
+      });
+      return;
+    }
+    const currentSigner =
+      signer === undefined || signer === null ? provider : signer;
+
+    const userNameContract = new ethers.Contract(
+      TokenAddress,
+      TokenABI,
+      currentSigner
+    );
+
+    if (userNameSetted === "") {
+      toast.error("Please enter username", {
+        position: toast.POSITION.TOP_CENTER,
+      });
+      return;
+    }
+    if (userNameSetted.length !== 15) {
+      toast.error("Please enter valid username", {
+        position: toast.POSITION.TOP_CENTER,
+      });
+      return;
+    }
+
+    const currentUserName = userNameSetted.toUpperCase();
+
+    try {
+      setReferralSelfLoading(true);
+
+      const referralCodeTx = await userNameContract.setUserNameToSystem(
+        currentUserName
+      );
+      await referralCodeTx.wait();
+      setReferralSelfLoading(false);
+      getRefferalCodeFromAddress();
+      setUserReferralCodeState(false);
+      setSelfUserInputState(false);
+      toast.success("Username set successfully", {
+        position: toast.POSITION.TOP_CENTER,
+      });
+    } catch (err) {
+      setReferralSelfLoading(false);
+      console.log(err);
+      toast.error("Username set failed", {
         position: toast.POSITION.TOP_CENTER,
       });
     }
@@ -370,6 +448,57 @@ function ProfileInformation() {
                         />
                       </>
                     )}
+                    
+                  </div>
+                </div>
+                <div className="profileYourReferrals">
+                  <div className="profileInformationsBodyParts">
+                    <Form.Label className="profileInfoLabel">
+                      User Name{" "}
+                      {referralSelfLoading && (
+                        <i className="fa fa-spinner fa-spin"></i>
+                      )}
+                    </Form.Label>
+
+                    {usingUsernameSetting === "" || selfUserInputState ? (
+                      <input
+                        type="text"
+                        placeholder="Ex: Sam Porter"
+                        className="profileInput"
+                        maxLength="15"
+                        value={userNameSetted}
+                        onChange={(e) =>
+                          setUserNameSetted(e.target.value)
+                        }
+                      />
+                    ) : (
+                      <span className="profileInput">
+                        {usingUsernameSetting}
+                      </span>
+                    )}
+
+                    {usingUsernameSetting === "" || selfUserInputState ? (
+                      <>
+                        <AiFillRightCircle
+                          className="referralsIconSubmit"
+                          style={{
+                            color: referralSelfLoading && "gray",
+                            cursor: referralSelfLoading && "not-allowed",
+                          }}
+                          onClick={() =>
+                            !referralSelfLoading && handleUserSelfName()
+                          }
+                        />
+                      </>
+                    ) : (
+                      <>
+                        <FaPencilAlt
+                          className="referralsIconGiven"
+                          onClick={() => handleSelfRefCode()}
+                        />
+                      </>
+                    )}
+                    
                   </div>
                 </div>
               </div>

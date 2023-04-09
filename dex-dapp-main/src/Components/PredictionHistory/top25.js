@@ -25,21 +25,11 @@ function Top25History() {
   const currentSigner =
     signer === undefined || signer === null ? provider : signer;
 
-  const [personelInvoice, setPersonelInvoice] = useState(null);
-  const [transferHistory, setTransferHistory] = useState(null);
-
-  const getTransactionHist = async (address) => {
-    let etherscanProvider = new ethers.providers.EtherscanProvider("goerli",'85STCM4J5ZXW91GZYDTS884TG3JK32B2IQ');
-    
-    etherscanProvider.getHistory(currentAddress).then((history) => {
-        history.forEach((tx) => {
-            console.log(tx);
-            console.log("TX VALUE: "+tx.value);
-        })
-    });
-      };
+  const [personelInvoice, setPersonelInvoice] = useState([]);
+  const [transferHistory, setTransferHistory] = useState([]);
 
   const getTopHistory = async () => {
+    
     try {
       const fetchTopHistory = await matrixContract.getAllTransfereHistory(currentAddress);
       const personelInvoiceArr = await matrixContract.getPersonelInvoice(currentAddress);
@@ -66,14 +56,14 @@ function Top25History() {
   if (transferHistory !== null) {
     for (let i = 0; i < transferHistory.length; i++) {
       let hash = ethers.utils.parseBytes32String(personelInvoice[i]);
-      let from = transferHistory[i][0]; // from
-      let to = transferHistory[i][1]; // to
+      let from = ethers.utils.parseBytes32String(transferHistory[i][5]); // from
+      let to = ethers.utils.parseBytes32String(transferHistory[i][6]); // to
       let fromCitizenNumber = ethers.utils.parseBytes32String(transferHistory[i][2]); // fromCitizen
       let toCitizenNumber = ethers.utils.parseBytes32String(transferHistory[i][3]); // toCitizen
       let donate = ethers.utils.formatEther(transferHistory[i][4]); // refBalance
       let donateAmount = Number(donate).toFixed(2); // refRewardBalance
       if(donateAmount != 0){
-        tabledatas.push([hash,from, to, fromCitizenNumber, toCitizenNumber, donateAmount]);
+        tabledatas.push([hash,from.toUpperCase(), to.toUpperCase(), fromCitizenNumber, toCitizenNumber, donateAmount]);
       }
       
     }
@@ -95,7 +85,8 @@ function Top25History() {
           {tabledatas.slice(0, tabledatas.length).map((item, index) => {
             return (
               <tr>
-                <td><Link to={"https://testnet.bscscan.com/address/"+item[1]} style={{ textDecoration: 'none' , color: 'white'}} target="_blank">{item[1]}</Link></td>
+                <td>{item[1]}</td>
+                {/* <td><Link to={"https://testnet.bscscan.com/address/"+item[1]} style={{ textDecoration: 'none' , color: 'white'}} target="_blank">{item[1]}</Link></td> */}
               </tr>
             );
           })}
@@ -104,7 +95,8 @@ function Top25History() {
           {tabledatas.slice(0, tabledatas.length).map((item, index) => {
             return (
               <tr>
-                <td><Link to={"https://testnet.bscscan.com/address/"+item[2]} style={{ textDecoration: 'none' , color: 'white'}} target="_blank">{item[2]}</Link></td>
+                <td>{item[2]}</td>
+                {/* <td><Link to={"https://testnet.bscscan.com/address/"+item[2]} style={{ textDecoration: 'none' , color: 'white'}} target="_blank">{item[2]}</Link></td> */}
               </tr>
             );
           })}
