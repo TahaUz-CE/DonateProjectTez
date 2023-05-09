@@ -11,7 +11,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer } from "react-toastify";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import NotFound from "./Pages/NotFound";
-import BackgroundVideo from "../src/Assets/video.mp4";
+import BackgroundVideo from "../src/Assets/video.webm";
 
 
 function App() {
@@ -22,7 +22,7 @@ function App() {
 
         <div className="videoWrapper">
           <video className="videoBg" autoPlay loop muted>
-            <source src={BackgroundVideo} type="video/mp4" />
+            <source src={BackgroundVideo} type="video/webm" />
           </video>
         </div>
 

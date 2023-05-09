@@ -1055,6 +1055,9 @@ contract TommorrowInYourHand {
         uint256 donateBalance;
         bytes32 fromUserName;
         bytes32 toUserName;
+        bytes32[] userNames;
+        uint256[] donateAmounts;
+        bool donated;
     }
 
     EnumerableSet.AddressSet private _labels;
@@ -1115,7 +1118,7 @@ contract TommorrowInYourHand {
             /* perAmount = msg.value/lengthFoundations; */
             perAmount = (msg.value * donateRate[i]) / 100;
             _to.transfer(perAmount);
-            addressToLabels[_to].totalDonate = perAmount;
+            addressToLabels[_to].totalDonate += perAmount;
             transferCode = codeCreator();
             transferHistoryAndPersonelInvoiceSaved(transferCode,msg.sender,_to,perAmount);
         }
@@ -1127,19 +1130,62 @@ contract TommorrowInYourHand {
     function transferFoundationBNB(address payable _to) external payable onlyFoundation{
         
         bytes32 transferCode;
-
-        uint256 perAmount;
+        
+        uint256 perAmount = msg.value;
 
         require(addressToLabels[msg.sender].myLabelCode != bytes32(0), "You must have a login with citizen number");
         require(addressToLabels[msg.sender].labelCode != bytes32(0), "You must have a label to donate");
+        
+        
+        bytes32[] memory userNamesDonaters = new bytes32[](10);
+        uint256[] memory amountDonaters = new uint256[](10);
+        address[] memory addresslist = new address[](10);
 
-        perAmount = msg.value; 
-        _to.transfer(perAmount);
+        uint256 count;
+
+        uint256 length = personelInvoice[msg.sender].length;
+    
+        
+        for(uint256 i = 0; i < length; i++){
+            bytes32 code = personelInvoice[msg.sender][i];
+            if (perAmount != 0){
+                if (transferCodestoAddressTrack[code].toAddress == msg.sender) {
+                uint256 amount = transferCodestoAddressTrack[code].donateBalance;
+                address addressF = transferCodestoAddressTrack[code].fromAddress;
+                if(transferCodestoAddressTrack[code].donated == false){
+                    if (amount != 0){
+                        bytes32 userN = transferCodestoAddressTrack[code].fromUserName;
+                        if (perAmount >= amount){
+                            perAmount -= amount;
+                            userNamesDonaters[count] = userN;
+                            amountDonaters[count] = amount;
+                            addressToLabels[addressF].totalSpending += amount;
+                            addresslist[count] = addressF;
+                            count += 1;
+                            transferCodestoAddressTrack[code].donated = true;
+                        }else{
+                            userNamesDonaters[count] = userN;
+                            amountDonaters[count] = perAmount;
+                            addressToLabels[addressF].totalSpending += perAmount;
+                            addresslist[count] = addressF;
+                            count += 1;
+                            perAmount = 0;
+                            //transferCodestoAddressTrack[code].donated = true;
+                        }
+                    }
+                }
+                }
+            }
+        }
+
+        require(perAmount == 0, "Transfer Fail !");
+
+        _to.transfer(msg.value);
         transferCode = codeCreator();
-        transferHistoryAndPersonelInvoiceSaved(transferCode,msg.sender,_to,perAmount);
+        transferHistoryAndPersonelInvoiceSavedFoundation(transferCode,msg.sender,_to,msg.value,userNamesDonaters,addresslist,amountDonaters);
        
         addressToLabels[msg.sender].totalSpending += msg.value;
-        addressToLabels[_to].totalSpending += msg.value;  
+        addressToLabels[_to].totalSpending += msg.value;
         
     }
 
@@ -1200,7 +1246,10 @@ contract TommorrowInYourHand {
                 transferCodestoAddressTrack[personelInvoice[_user][i]].labelCode,
                 transferCodestoAddressTrack[personelInvoice[_user][i]].donateBalance,
                 transferCodestoAddressTrack[personelInvoice[_user][i]].fromUserName,
-                transferCodestoAddressTrack[personelInvoice[_user][i]].toUserName
+                transferCodestoAddressTrack[personelInvoice[_user][i]].toUserName,
+                transferCodestoAddressTrack[personelInvoice[_user][i]].userNames,
+                transferCodestoAddressTrack[personelInvoice[_user][i]].donateAmounts,
+                transferCodestoAddressTrack[personelInvoice[_user][i]].donated
             );
         }
 
@@ -1380,6 +1429,30 @@ contract TommorrowInYourHand {
             
             personelInvoice[from].push(transferCode);
             personelInvoice[to].push(transferCode);
+            
+    }
+
+    function transferHistoryAndPersonelInvoiceSavedFoundation(bytes32 transferCode,address from, address to, uint256 amount, bytes32[] memory resultUserNames,address[] memory list, uint256[] memory amounts) private {
+        
+            transferCodestoAddressTrack[transferCode].fromAddress = from;
+            transferCodestoAddressTrack[transferCode].toAddress = to;
+            transferCodestoAddressTrack[transferCode].myLabelCode = addressToLabels[from].myLabelCode;
+            transferCodestoAddressTrack[transferCode].labelCode = addressToLabels[to].myLabelCode;
+            transferCodestoAddressTrack[transferCode].donateBalance = amount;
+            transferCodestoAddressTrack[transferCode].fromUserName = addressToLabels[from].userName;
+            transferCodestoAddressTrack[transferCode].toUserName = addressToLabels[to].userName;
+            transferCodestoAddressTrack[transferCode].userNames = resultUserNames;
+            transferCodestoAddressTrack[transferCode].donateAmounts = amounts;
+            
+            personelInvoice[from].push(transferCode);
+            personelInvoice[to].push(transferCode);
+            
+            for ( uint i = 0; i < list.length; i++ ) {
+                if(list[i] != address(0)){
+                    personelInvoice[list[i]].push(transferCode);
+                }
+                
+            }
             
     }
 }

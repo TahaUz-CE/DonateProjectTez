@@ -619,7 +619,7 @@ function BuyReferralsCard() {
                 </div>
                 {activeTab2 ? (
                   <>
-                    {foundation !== null && foundation !== "" ? (
+                    {commercial !== null && commercial !== "" ? (
                       <button
                         className="buyReferralsButton"
 
@@ -634,7 +634,7 @@ function BuyReferralsCard() {
                   </>
                 ) : (
                   <>
-                    {foundation !== null && foundation !== "" ? (
+                    {commercial !== null && commercial !== "" ? (
                       <button
                         className="buyReferralsButton"
 

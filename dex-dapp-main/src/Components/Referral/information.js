@@ -289,7 +289,7 @@ function ProfileInformation() {
       });
       return;
     }
-    if (userNameSetted.length !== 15) {
+    if (userNameSetted.length > 15) {
       toast.error("Please enter valid username", {
         position: toast.POSITION.TOP_CENTER,
       });

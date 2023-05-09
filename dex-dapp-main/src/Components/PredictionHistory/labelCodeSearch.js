@@ -35,18 +35,17 @@ function Top25History() {
         setTransferHistory([]);
         setPersonelInvoice([]);
         const allAddress = await matrixContract.getAlllabels();
-
-        allAddress.forEach(element => {
-            console.log(element[0]);
-        });
-
-        try {
-            const fetchTopHistory = await matrixContract.getAllTransfereHistory(currentAddress);
-            const personelInvoiceArr = await matrixContract.getPersonelInvoice(currentAddress);
-            setTransferHistory(transferHistory => [...transferHistory, fetchTopHistory]);
-            setPersonelInvoice(personelInvoice => [...personelInvoice, personelInvoiceArr]);
-        } catch (e) {
-            console.log(e);
+        
+        for (let i = 0; i < allAddress.length; i++) {
+            console.log(allAddress[i][0]);
+            try {
+                const fetchTopHistory = await matrixContract.getAllTransfereHistory(allAddress[i][0]);
+                const personelInvoiceArr = await matrixContract.getPersonelInvoice(allAddress[i][0]);
+                setTransferHistory(transferHistory => [...transferHistory, fetchTopHistory]);
+                setPersonelInvoice(personelInvoice => [...personelInvoice, personelInvoiceArr]);
+            } catch (e) {
+                console.log(e);
+            }
         }
     };
 
@@ -74,7 +73,8 @@ function Top25History() {
 
 
                     let hash = ethers.utils.parseBytes32String(personelInvoice[countTHPersonelInvoice][i]);
-                    if (hash === code) {
+                    if (hash === code &&  tabledatas.length === 0) {
+                        console.log(tabledatas.length);
                         /* let from = tHElement[i][0]; // from
                                             let to = tHElement[i][1]; // to */
                         let from = ethers.utils.parseBytes32String(tHElement[i][5]); // from
