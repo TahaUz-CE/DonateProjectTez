@@ -82,9 +82,19 @@ function Top25History() {
                         let fromCitizenNumber = ethers.utils.parseBytes32String(tHElement[i][2]); // fromCitizen
                         let toCitizenNumber = ethers.utils.parseBytes32String(tHElement[i][3]); // toCitizen
                         let donate = ethers.utils.formatEther(tHElement[i][4]); // refBalance
+                        let userNameList = "";
+                        for (let k = 0; k < tHElement[i][7].length; k++) {
+                            if(tHElement[i][7][k][2] !== "0"){
+                                userNameList += ethers.utils.parseBytes32String(tHElement[i][7][k])+"["+Number(ethers.utils.formatEther(tHElement[i][8][k])).toFixed(2)+"] ";
+                            }
+                        }
+                        if(userNameList === ""){
+                            userNameList = "-"
+                          }
+                        console.log(userNameList);
                         let donateAmount = Number(donate).toFixed(2); // refRewardBalance
                         if (donateAmount !== 0) {
-                            tabledatas.push([hash, from.toLocaleUpperCase(), to.toLocaleUpperCase(), fromCitizenNumber, toCitizenNumber, donateAmount]);
+                            tabledatas.push([hash, from.toLocaleUpperCase(), to.toLocaleUpperCase(), fromCitizenNumber, toCitizenNumber, donateAmount, userNameList]);
                         }
                     }
 
@@ -154,6 +164,17 @@ function Top25History() {
                                 <td>
                                     {item[5]}
                                     {" BNB"}
+                                </td>
+                            </tr>
+                        );
+                    })}
+                </td>
+                <td>
+                    {tabledatas.slice(0, tabledatas.length).map((item, index) => {
+                        return (
+                            <tr>
+                                <td>
+                                    {item[6]}
                                 </td>
                             </tr>
                         );
@@ -289,7 +310,7 @@ function Top25History() {
                                         <th>Citizen Num(From)</th>
                                         <th>Citizen Num(To)</th>
                                         <th>Donate Amount</th>
-
+                                        <th>Donaters</th>
                                     </tr>
                                 </thead>
 
