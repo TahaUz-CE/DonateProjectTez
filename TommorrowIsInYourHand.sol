@@ -1079,6 +1079,7 @@ contract TommorrowInYourHand {
 
     // Her bir transferin kodu olucak böylelikle aynı kişiye yollanan transferler farklılaşmış olucak
     mapping(bytes32 => TransferHistory) public transferCodestoAddressTrack;
+    mapping(bytes32 => TransferHistory) public tempTransferCodestoAddressTrack;
 
     mapping(address => bool) private _isFoundation;
 
@@ -1150,7 +1151,7 @@ contract TommorrowInYourHand {
             bytes32 code = personelInvoice[msg.sender][i];
             if (perAmount != 0){
                 if (transferCodestoAddressTrack[code].toAddress == msg.sender) {
-                uint256 amount = transferCodestoAddressTrack[code].donateBalance;
+                uint256 amount = tempTransferCodestoAddressTrack[code].donateBalance;
                 address addressF = transferCodestoAddressTrack[code].fromAddress;
                 if(transferCodestoAddressTrack[code].donated == false){
                     if (amount != 0){
@@ -1169,6 +1170,7 @@ contract TommorrowInYourHand {
                             addressToLabels[addressF].totalSpending += perAmount;
                             addresslist[count] = addressF;
                             count += 1;
+                            tempTransferCodestoAddressTrack[code].donateBalance = amount - perAmount;
                             perAmount = 0;
                             //transferCodestoAddressTrack[code].donated = true;
                         }
@@ -1426,6 +1428,8 @@ contract TommorrowInYourHand {
             transferCodestoAddressTrack[transferCode].donateBalance = amount;
             transferCodestoAddressTrack[transferCode].fromUserName = addressToLabels[from].userName;
             transferCodestoAddressTrack[transferCode].toUserName = addressToLabels[to].userName;
+
+            tempTransferCodestoAddressTrack[transferCode].donateBalance = amount;
             
             personelInvoice[from].push(transferCode);
             personelInvoice[to].push(transferCode);
