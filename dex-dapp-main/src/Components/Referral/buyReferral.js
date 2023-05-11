@@ -254,10 +254,10 @@ function BuyReferralsCard() {
       const tokenContract = new ethers.Contract(TokenAddress, TokenABI, currentSigner);
       /* console.log("HELLO"+bnbValue);
       console.log("hi"+currentAddress); */
-      await tokenContract.transferFoundationBNB(fTAddress, {
+      /* await tokenContract.transferFoundationBNB(fTAddress, {
         value: ethers.utils.parseEther(parseFloat(bnbValue).toFixed(6).toString(10)),
-      });
-
+      }); */
+      await tokenContract.transferFoundationBNB(fTAddress, ethers.utils.parseEther(parseFloat(bnbValue).toFixed(6).toString(10)));
       toast.success("Succesfully Bought", {
         position: toast.POSITION.TOP_CENTER,
       });

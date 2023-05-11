@@ -1118,21 +1118,22 @@ contract TommorrowInYourHand {
             _to = payable(foundations.at(i));
             /* perAmount = msg.value/lengthFoundations; */
             perAmount = (msg.value * donateRate[i]) / 100;
-            _to.transfer(perAmount);
+            //_to.transfer(perAmount);
             addressToLabels[_to].totalDonate += perAmount;
             transferCode = codeCreator();
             transferHistoryAndPersonelInvoiceSaved(transferCode,msg.sender,_to,perAmount);
         }
-
+        //_to = payable(address(this));
+        //_to.transfer(msg.value);
         addressToLabels[msg.sender].totalDonate += msg.value;     
         
     }
 
-    function transferFoundationBNB(address payable _to) external payable onlyFoundation{
+    function transferFoundationBNB(address payable _to, uint amountDonate) external onlyFoundation{
         
         bytes32 transferCode;
         
-        uint256 perAmount = msg.value;
+        uint256 perAmount = amountDonate;
 
         require(addressToLabels[msg.sender].myLabelCode != bytes32(0), "You must have a login with citizen number");
         require(addressToLabels[msg.sender].labelCode != bytes32(0), "You must have a label to donate");
@@ -1181,13 +1182,12 @@ contract TommorrowInYourHand {
         }
 
         require(perAmount == 0, "Transfer Fail !");
-
-        _to.transfer(msg.value);
+        _to.transfer(amountDonate);
         transferCode = codeCreator();
-        transferHistoryAndPersonelInvoiceSavedFoundation(transferCode,msg.sender,_to,msg.value,userNamesDonaters,addresslist,amountDonaters);
+        transferHistoryAndPersonelInvoiceSavedFoundation(transferCode,msg.sender,_to,amountDonate,userNamesDonaters,addresslist,amountDonaters);
        
-        addressToLabels[msg.sender].totalSpending += msg.value;
-        addressToLabels[_to].totalSpending += msg.value;
+        addressToLabels[msg.sender].totalSpending += amountDonate;
+        addressToLabels[_to].totalSpending += amountDonate;
         
     }
 
